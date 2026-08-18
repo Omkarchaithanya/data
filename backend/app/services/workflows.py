@@ -1,0 +1,97 @@
+from __future__ import annotations
+
+from dataclasses import asdict
+
+from backend.app.core.models import HealResult, RunResult, utc_now_iso
+from backend.app.services.brightdata_client import BrightDataClient
+from backend.app.services.demo_data import demo_records
+from backend.app.services.drift import detect_drift
+from backend.app.services.prompt_builder import build_heal_prompt
+from backend.app.services.scoring import grounding_health_score
+from backend.app.services.source_registry import get_source, load_sources
+from backend.app.services.storage import EventStore
+from backend.app.services.validation import validate_records
+
+
+class GroundTruthService:
+    def __init__(self, brightdata: BrightDataClient, store: EventStore, demo_mode: bool = True) -> None:
+        self.brightdata = brightdata
+        self.store = store
+        self.demo_mode = demo_mode
+
+    def list_sources(self) -> list[dict]:
+        return [asdict(source) for source in load_sources()]
+
+    def run_source(self, source_id: str, mode: str = "healthy") -> RunResult:
+        source = get_source(source_id)
+        previous = self.store.latest_records(source_id)
+        if self.demo_mode:
+            records = demo_records(source_id, mode)
+        elif not source.collector_id:
+            raise RuntimeError(
+                f"Real mode is enabled, but {source.id} has no collector ID. "
+                f"Set {source.collector_id_env} in .env."
+            )
+        else:
+            records = self.brightdata.run_scraper(source.collector_id, source.url)
+        validation = validate_records(source, records)
+        drift = detect_drift(source, records, validation, previous)
+        score = grounding_health_score(source, validation, drift)
+        result = RunResult(source.id, utc_now_iso(), records, validation, drift, score)
+        self.store.append(source.id, "run", result.timestamp, asdict(result))
+        return result
+
+    def detect_source_drift(self, source_id: str, mode: str = "broken") -> RunResult:
+        return self.run_source(source_id, mode=mode)
+
+    def heal_source(self, source_id: str) -> HealResult:
+        source = get_source(source_id)
+        records = self.store.latest_records(source_id) or []
+        validation = validate_records(source, records)
+        drift = detect_drift(source, records, validation)
+        prompt = build_heal_prompt(source, validation, drift)
+
+        if self.demo_mode:
+            preview = demo_records(source_id, "healed")
+            status = "awaiting_approval"
+            collector_id = source.collector_id or f"demo_{source.id}"
+        elif not source.collector_id:
+            raise RuntimeError(
+                f"Real mode is enabled, but {source.id} has no collector ID. "
+                f"Set {source.collector_id_env} in .env."
+            )
+        else:
+            payload = self.brightdata.heal_scraper(source.collector_id, prompt, source.url)
+            preview = payload.get("preview_result", [])
+            status = payload.get("status", "awaiting_approval")
+            collector_id = payload.get("collector_id", source.collector_id)
+
+        preview_validation = validate_records(source, preview)
+        approval_status = "ready" if preview_validation.valid else "blocked"
+        result = HealResult(
+            source.id,
+            utc_now_iso(),
+            prompt,
+            status,
+            preview,
+            preview_validation,
+            approval_status,
+            collector_id,
+        )
+        self.store.append(source.id, "heal", result.timestamp, asdict(result))
+        return result
+
+    def approve_heal(self, source_id: str) -> dict:
+        source = get_source(source_id)
+        timestamp = utc_now_iso()
+        if self.demo_mode:
+            payload = {"status": "approved", "collector_id": source.collector_id or f"demo_{source.id}"}
+        elif not source.collector_id:
+            raise RuntimeError(
+                f"Real mode is enabled, but {source.id} has no collector ID. "
+                f"Set {source.collector_id_env} in .env."
+            )
+        else:
+            payload = self.brightdata.approve_scraper(source.collector_id, source.url)
+        self.store.append(source.id, "approve", timestamp, payload)
+        return {"timestamp": timestamp, **payload}
