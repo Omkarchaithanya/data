@@ -39,7 +39,9 @@ class BrightDataClient:
             check=False,
             capture_output=True,
             text=True,
+            encoding="utf-8",
             env=env,
+            shell=(os.name == 'nt')
         )
         if completed.returncode != 0:
             raise RuntimeError(completed.stderr.strip() or completed.stdout.strip())

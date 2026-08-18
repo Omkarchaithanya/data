@@ -22,7 +22,6 @@ def grounding_health_score(
         score -= max(5, (1 - drift.similarity) * 30)
     if last_run_at and _is_stale(last_run_at, source.sla_hours):
         score -= 10
-    score *= max(0.5, min(source.weight, 1.0))
     return max(0, min(100, round(score)))
 
 

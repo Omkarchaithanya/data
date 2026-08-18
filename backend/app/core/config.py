@@ -33,7 +33,7 @@ def get_settings() -> Settings:
     return Settings(
         brightdata_api_key=os.getenv("BRIGHTDATA_API_KEY", ""),
         database_url=os.getenv("DATABASE_URL", "data/demo.db"),
-        demo_mode=os.getenv("DEMO_MODE", "true").lower() in {"1", "true", "yes"},
+        demo_mode=os.getenv("DEMO_MODE", "false").lower() in {"1", "true", "yes"},
         root_dir=ROOT_DIR,
     )
 

@@ -32,3 +32,21 @@ def test_semantic_change_detected_against_prior_snapshot():
     assert drift.semantic is True
     assert "input_price" in drift.changed_fields
 
+
+def test_healthy_source_achieves_perfect_score_uncapped_by_weight():
+    source_with_low_weight = Source(
+        id="low_weight",
+        name="Low Weight",
+        url="http://localhost",
+        type="pricing",
+        expected_fields=["field1"],
+        weight=0.6,
+    )
+    records = [{"field1": "value"}]
+    validation = validate_records(source_with_low_weight, records)
+    drift = detect_drift(source_with_low_weight, records, validation)
+    score = grounding_health_score(source_with_low_weight, validation, drift)
+
+    # Even with a 0.6 weight, a completely healthy payload should score 100 on its own metrics
+    assert score == 100
+

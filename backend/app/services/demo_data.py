@@ -30,11 +30,12 @@ HEALED_CANARY = [
     }
 ]
 
-
 def demo_records(source_id: str, mode: str = "healthy") -> list[dict[str, Any]]:
-    if source_id == "canary_vendor" and mode == "broken":
-        return BROKEN_CANARY
-    if source_id == "canary_vendor" and mode == "healed":
-        return HEALED_CANARY
-    return HEALTHY_CANARY
-
+    if source_id == "canary_vendor":
+        if mode == "broken":
+            return BROKEN_CANARY
+        if mode == "healed":
+            return HEALED_CANARY
+        return HEALTHY_CANARY
+    
+    raise RuntimeError("this source requires DEMO_MODE=false and a real collector ID")
