@@ -11,10 +11,7 @@ from backend.app.services.storage import EventStore
 from backend.app.services.workflows import GroundTruthService
 
 
-import os
 settings = get_settings()
-print(f"API.PY DEBUG: DEMO_MODE env var={os.getenv('DEMO_MODE')}")
-print(f"API.PY DEBUG: settings.demo_mode={settings.demo_mode}")
 service = GroundTruthService(
     BrightDataClient(settings.brightdata_api_key),
     EventStore(settings.database_url),
@@ -80,6 +77,26 @@ async def approve(source_id: str) -> dict:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except RuntimeError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/sources/{source_id}/reject-heal")
+async def reject(source_id: str) -> dict:
+    try:
+        return service.reject_heal(source_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.get("/budget")
+async def get_budget() -> dict:
+    return service.get_budget()
+
+
+@router.get("/export")
+async def export_data() -> dict:
+    return service.export_data()
 
 
 @router.get("/events")

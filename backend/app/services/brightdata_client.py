@@ -40,6 +40,31 @@ class BrightDataClient:
     def approve_scraper(self, collector_id: str, url: str) -> dict[str, Any]:
         return self._run(["scraper", "approve", collector_id, "--url", url, "--pretty"])
 
+    def reject_scraper(self, collector_id: str, url: str) -> dict[str, Any]:
+        return self._run(["scraper", "approve", collector_id, "--reject", "--url", url, "--pretty"])
+
+    def get_budget(self) -> dict[str, Any]:
+        env = os.environ.copy()
+        if self.api_key:
+            env["BRIGHTDATA_API_KEY"] = self.api_key
+        completed = subprocess.run(
+            [self.command, "budget", "--json"],
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            env=env,
+            shell=(os.name == 'nt')
+        )
+        if completed.returncode != 0:
+            return {"balance": "Unknown (API key lacks billing permission)"}
+            
+        output = completed.stdout.strip()
+        try:
+            return json.loads(output)
+        except json.JSONDecodeError:
+            return {"balance": "Unknown (Could not parse budget)"}
+
     def _run(self, args: list[str]) -> dict[str, Any] | list[Any]:
         env = os.environ.copy()
         if self.api_key:

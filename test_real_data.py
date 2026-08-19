@@ -15,9 +15,9 @@ def main():
     store = EventStore(settings.database_url)
     service = GroundTruthService(client, store, demo_mode=False)
     
-    print("Running openai_pricing...")
-    res1 = service.run_source("openai_pricing")
-    print("\nOPENAI RESPONSE:")
+    print("Running anthropic_pricing...")
+    res1 = service.run_source("anthropic_pricing")
+    print("\nANTHROPIC PRICING RESPONSE:")
     print(json.dumps(asdict(res1), indent=2))
     
     print("\nRunning anthropic_news...")

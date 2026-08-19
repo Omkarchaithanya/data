@@ -63,6 +63,11 @@ type HealResult = {
   preview_result: Record<string, unknown>[];
   validation: Validation;
   approval_status: string;
+  next_step?: string;
+};
+
+type Budget = {
+  balance: string;
 };
 
 type EventItem = {
@@ -87,6 +92,7 @@ function App() {
   const [heal, setHeal] = useState<HealResult | null>(null);
   const [events, setEvents] = useState<EventItem[]>([]);
   const [demoMode, setDemoMode] = useState(true);
+  const [budget, setBudget] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -96,16 +102,19 @@ function App() {
 
   async function refresh() {
     try {
-      const [sourceRes, eventRes, healthRes] = await Promise.all([
+      const [sourceRes, eventRes, healthRes, budgetRes] = await Promise.all([
         fetch(`${API_BASE}/sources`),
         fetch(`${API_BASE}/events`),
         fetch(`${API_BASE}/health`),
+        fetch(`${API_BASE}/budget`),
       ]);
       const loadedSources = (await sourceRes.json()) as Source[];
       const health = (await healthRes.json()) as Health;
+      const budgetData = (await budgetRes.json()) as Budget;
       setSources(loadedSources);
       setEvents(await eventRes.json());
       setDemoMode(health.demo_mode);
+      setBudget(budgetData.balance);
     } catch (e) {
       setError("Failed to connect to API.");
     }
@@ -148,6 +157,39 @@ function App() {
     return groups;
   }, [activeEvents]);
 
+  const latestHealthScores = useMemo(() => {
+    const scores: Record<string, number> = {};
+    events.forEach(ev => {
+      if (ev.kind === "run" && ev.payload.health_score !== undefined) {
+        if (scores[ev.source_id] === undefined) {
+          scores[ev.source_id] = ev.payload.health_score as number;
+        }
+      }
+    });
+    return scores;
+  }, [events]);
+
+  const atRiskSources = sources.filter(s => {
+    const score = latestHealthScores[s.id];
+    return score !== undefined && score < 100;
+  });
+
+  async function handleExport() {
+    try {
+      const res = await fetch(`${API_BASE}/export`);
+      const data = await res.json();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "rag_evidence_export.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setError("Failed to export data.");
+    }
+  }
+
   return (
     <main>
       <aside>
@@ -164,6 +206,7 @@ function App() {
         <div className="pulse-card">
           <span>{demoMode ? "Demo Mesh" : "Live Mesh"}</span>
           <strong>{sources.filter((source) => demoMode || source.collector_id).length || 0} sources ready</strong>
+          {budget && <div style={{ fontSize: "11px", opacity: 0.8, marginTop: "4px" }}>Budget: {budget}</div>}
           <div className="pulse-line" />
         </div>
 
@@ -208,8 +251,30 @@ function App() {
                 <p className="eyebrow">Grounding intelligence console</p>
                 <h2>Mesh Overview</h2>
                 <p className="url">{sources.length} total sources monitored</p>
+                <div style={{ marginTop: "1rem" }}>
+                  <button onClick={handleExport} className="export-btn" style={{ padding: "0.5rem 1rem", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "4px", color: "white", cursor: "pointer" }}>
+                    Export RAG Evidence
+                  </button>
+                </div>
               </div>
             </header>
+
+            {atRiskSources.length > 0 && (
+              <section className="at-risk-section" style={{ margin: "2rem", padding: "1rem", background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.3)", borderRadius: "8px" }}>
+                <h3 style={{ color: "rgb(252, 165, 165)", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <TriangleAlert size={18} /> At-Risk Citations
+                </h3>
+                <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                  {atRiskSources.map(s => (
+                    <li key={s.id} style={{ display: "flex", justifyContent: "space-between", background: "rgba(0,0,0,0.2)", padding: "0.75rem", borderRadius: "4px" }}>
+                      <strong>{s.name}</strong>
+                      <span style={{ color: "rgb(252, 165, 165)" }}>Score: {latestHealthScores[s.id]}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
             <section className="events">
               <div className="section-heading">
                 <h3>System Timeline</h3>
@@ -294,7 +359,16 @@ function App() {
               <button onClick={async () => { await call(`/sources/${selected}/approve-heal`); setHeal(null); }} disabled={loading || heal?.approval_status !== "ready"}>
                 <CheckCircle2 size={16} /> Approve
               </button>
+              <button onClick={async () => { await call(`/sources/${selected}/reject-heal`); setHeal(null); }} disabled={loading || heal?.approval_status !== "ready"} style={{ background: "rgba(239, 68, 68, 0.1)", color: "rgb(252, 165, 165)", borderColor: "rgba(239, 68, 68, 0.3)" }}>
+                Reject
+              </button>
             </div>
+
+            {heal?.next_step && (
+              <div className="notice" style={{ background: "rgba(59, 130, 246, 0.1)", color: "rgb(147, 197, 253)", borderColor: "rgba(59, 130, 246, 0.3)" }}>
+                <strong>Next Step:</strong> {heal.next_step}
+              </div>
+            )}
 
             <section className="status-strip">
               <Metric label="Validation" value={run ? (run.validation.valid ? "Passed" : "Blocked") : "Ready"} />

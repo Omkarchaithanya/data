@@ -10,14 +10,17 @@ def build_heal_prompt(source: Source, validation: ValidationResult, drift: Drift
     reasons = " ".join(drift.reasons or validation.errors) or "Collector output failed validation."
     expected = ", ".join(source.expected_fields)
     
-    prompt_file = ROOT_DIR / "collectors" / "prompts" / f"{source.id}.md"
-    if prompt_file.exists():
-        return prompt_file.read_text(encoding="utf-8").strip()[:2000]
-        
-    prompt = (
+    failure_context = (
         f"The scraper for {source.name} at {source.url} is returning invalid output. "
         f"Expected fields: {expected}. Missing fields: {missing}. Null counts: {nulls}. "
-        f"Observed failure: {reasons} Preserve the current output schema and fix extraction "
-        f"so every required field is populated from the current page."
+        f"Observed failure: {reasons}"
     )
-    return prompt[:2000]
+
+    prompt_file = ROOT_DIR / "collectors" / "prompts" / f"{source.id}.md"
+    if prompt_file.exists():
+        custom_instructions = prompt_file.read_text(encoding="utf-8").strip()
+        prompt = f"{failure_context}\n\nINSTRUCTIONS:\n{custom_instructions}"
+    else:
+        prompt = f"{failure_context} Preserve the current output schema and fix extraction so every required field is populated from the current page."
+        
+    return prompt[:1000]

@@ -65,4 +65,5 @@ class HealResult:
     validation: ValidationResult
     approval_status: str
     collector_id: str | None = None
+    next_step: str | None = None
 

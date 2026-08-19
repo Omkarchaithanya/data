@@ -79,6 +79,7 @@ class GroundTruthService:
             preview = demo_records(source_id, "healed")
             status = "awaiting_approval"
             collector_id = source.collector_id or f"demo_{source.id}"
+            next_step = "Run `bdata scraper approve` to accept changes."
         elif not source.collector_id:
             raise RuntimeError(
                 f"Real mode is enabled, but {source.id} has no collector ID. "
@@ -89,6 +90,7 @@ class GroundTruthService:
             preview = payload.get("preview_result", [])
             status = payload.get("status", "awaiting_approval")
             collector_id = payload.get("collector_id", source.collector_id)
+            next_step = payload.get("next_step")
 
         preview_validation = validate_records(source, preview)
         approval_status = "ready" if preview_validation.valid else "blocked"
@@ -101,6 +103,7 @@ class GroundTruthService:
             preview_validation,
             approval_status,
             collector_id,
+            next_step,
         )
         self.store.append(source.id, "heal", result.timestamp, asdict(result))
         return result
@@ -119,3 +122,37 @@ class GroundTruthService:
             payload = self.brightdata.approve_scraper(source.collector_id, source.url)
         self.store.append(source.id, "approve", timestamp, payload)
         return {"timestamp": timestamp, **payload}
+
+    def reject_heal(self, source_id: str) -> dict:
+        source = get_source(source_id)
+        timestamp = utc_now_iso()
+        if self.demo_mode:
+            payload = {"status": "rejected", "collector_id": source.collector_id or f"demo_{source.id}"}
+        elif not source.collector_id:
+            raise RuntimeError(
+                f"Real mode is enabled, but {source.id} has no collector ID. "
+                f"Set {source.collector_id_env} in .env."
+            )
+        else:
+            payload = self.brightdata.reject_scraper(source.collector_id, source.url)
+        self.store.append(source.id, "reject", timestamp, payload)
+        return {"timestamp": timestamp, **payload}
+
+    def get_budget(self) -> dict:
+        if self.demo_mode:
+            return {"balance": "$45.50 remaining (Demo Mode)"}
+        return self.brightdata.get_budget()
+
+    def export_data(self) -> dict:
+        sources = load_sources()
+        export = []
+        for s in sources:
+            records = self.store.latest_records(s.id)
+            if records:
+                export.append({
+                    "source_id": s.id,
+                    "url": s.url,
+                    "timestamp": utc_now_iso(),
+                    "records": records
+                })
+        return {"evidence": export}

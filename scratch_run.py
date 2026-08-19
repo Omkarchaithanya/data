@@ -12,8 +12,8 @@ service = GroundTruthService(
 )
 
 try:
-    print("Testing openai_pricing source...")
-    res = service.run_source("openai_pricing", "healthy")
+    print("Testing anthropic_pricing source...")
+    res = service.run_source("anthropic_pricing", "healthy")
     print(res)
 except Exception as e:
     print("Failed!", type(e), e)
