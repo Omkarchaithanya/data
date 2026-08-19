@@ -42,7 +42,31 @@ class GroundTruthService:
         return result
 
     def detect_source_drift(self, source_id: str, mode: str = "broken") -> RunResult:
-        return self.run_source(source_id, mode=mode)
+        source = get_source(source_id)
+        if self.demo_mode:
+            return self.run_source(source_id, mode=mode)
+        
+        # Real mode drift simulation: fetch real data, then mutate it to trigger schema failure
+        if not source.collector_id:
+            raise RuntimeError(f"Real mode is enabled, but {source.id} has no collector ID. Set {source.collector_id_env} in .env.")
+            
+        real_records = self.brightdata.run_scraper(source.collector_id, source.url)
+        broken_records = []
+        for r in real_records:
+            br = dict(r)
+            if source.expected_fields:
+                field_to_break = source.expected_fields[0]
+                br.pop(field_to_break, None)
+                br[f"broken_{field_to_break}"] = "drift_simulated"
+            broken_records.append(br)
+            
+        previous = self.store.latest_records(source_id)
+        validation = validate_records(source, broken_records)
+        drift = detect_drift(source, broken_records, validation, previous)
+        score = grounding_health_score(source, validation, drift)
+        result = RunResult(source.id, utc_now_iso(), broken_records, validation, drift, score)
+        self.store.append(source.id, "run", result.timestamp, asdict(result))
+        return result
 
     def heal_source(self, source_id: str) -> HealResult:
         source = get_source(source_id)

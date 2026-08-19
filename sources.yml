@@ -10,21 +10,21 @@
     "collector_id_env": "CANARY_VENDOR_COLLECTOR_ID"
   },
   {
-    "id": "openai_pricing",
-    "name": "OpenAI API Pricing",
-    "url": "https://openai.com/api/pricing",
+    "id": "anthropic_pricing",
+    "name": "Anthropic API Pricing",
+    "url": "https://www.anthropic.com/pricing",
     "type": "pricing",
     "expected_fields": ["model_name", "input_price", "output_price"],
     "weight": 0.9,
     "sla_hours": 24,
-    "collector_id_env": "OPENAI_PRICING_COLLECTOR_ID"
+    "collector_id_env": "ANTHROPIC_PRICING_COLLECTOR_ID"
   },
   {
     "id": "anthropic_news",
     "name": "Anthropic News",
     "url": "https://www.anthropic.com/news",
     "type": "changelog",
-    "expected_fields": ["title", "url", "published_at", "summary"],
+    "expected_fields": ["title", "url", "published_date", "summary"],
     "weight": 0.7,
     "sla_hours": 48,
     "collector_id_env": "ANTHROPIC_NEWS_COLLECTOR_ID"

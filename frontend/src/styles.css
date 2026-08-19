@@ -574,3 +574,182 @@ pre {
     width: 100%;
   }
 }
+/* --- Added for UI Overhaul --- */
+
+/* Badge Row */
+.badge-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.badge.demo {
+  background-color: var(--accent-transparent);
+  color: var(--accent);
+}
+
+.badge.live {
+  background-color: rgba(66, 211, 146, 0.2);
+  color: #42d392;
+}
+
+.badge.setup {
+  background-color: var(--card-border);
+  color: var(--text-muted);
+}
+
+/* Timeline */
+.timeline-group {
+  margin-bottom: 2rem;
+}
+
+.timeline-date {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--card-border);
+  padding-bottom: 0.5rem;
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.event {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+
+.event-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  color: var(--text-muted);
+}
+
+.event-icon.run { color: var(--accent); }
+.event-icon.heal { color: #facc15; }
+.event-icon.approve { color: #42d392; }
+
+.event-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.event-content strong {
+  color: var(--text-main);
+}
+
+.event-content span {
+  background: var(--card-border);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+}
+
+.event-content time {
+  color: var(--text-muted);
+  font-family: monospace;
+}
+
+/* Score Meta */
+.score-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 1rem;
+}
+
+.score-timestamp {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-family: monospace;
+}
+
+/* Heal Gate Tooltip */
+.heal-gate {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  cursor: help;
+  position: relative;
+}
+.heal-gate .info-icon {
+  color: var(--text-muted);
+}
+.heal-gate[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  padding: 0.5rem;
+  border-radius: 4px;
+  width: 200px;
+  white-space: normal;
+  font-size: 0.75rem;
+  color: var(--text-main);
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  margin-top: 0.5rem;
+}
+
+/* Drift diff tags */
+.diff-fields {
+  margin-top: 1rem;
+}
+.diff-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.diff-tag {
+  background: rgba(248, 113, 113, 0.15);
+  color: #f87171;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-family: monospace;
+  border: 1px solid rgba(248, 113, 113, 0.3);
+}
+
+/* Repair prompt */
+.repair-prompt-container {
+  background: var(--bg-main);
+  border: 1px solid var(--card-border);
+  border-radius: 6px;
+  padding: 1rem;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.repair-prompt {
+  margin: 0;
+  white-space: pre-wrap;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}

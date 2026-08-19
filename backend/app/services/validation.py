@@ -33,9 +33,12 @@ def validate_records(source: Source, records: list[dict[str, Any]]) -> Validatio
                 null_checks += 1
                 continue
             value = record.get(field)
-            if value in NULL_VALUES:
-                null_fields[field] += 1
-                null_checks += 1
+            try:
+                if value in NULL_VALUES:
+                    null_fields[field] += 1
+                    null_checks += 1
+            except TypeError:
+                pass
 
     compact_nulls = {field: count for field, count in null_fields.items() if count > 0}
     null_rate = null_checks / total_checks if total_checks else 1.0

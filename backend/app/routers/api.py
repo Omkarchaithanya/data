@@ -11,7 +11,10 @@ from backend.app.services.storage import EventStore
 from backend.app.services.workflows import GroundTruthService
 
 
+import os
 settings = get_settings()
+print(f"API.PY DEBUG: DEMO_MODE env var={os.getenv('DEMO_MODE')}")
+print(f"API.PY DEBUG: settings.demo_mode={settings.demo_mode}")
 service = GroundTruthService(
     BrightDataClient(settings.brightdata_api_key),
     EventStore(settings.database_url),

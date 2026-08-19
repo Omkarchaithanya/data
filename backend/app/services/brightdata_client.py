@@ -17,12 +17,22 @@ class BrightDataClient:
 
     def run_scraper(self, collector_id: str, url: str) -> list[dict[str, Any]]:
         payload = self._run(["scraper", "run", collector_id, url, "--pretty"])
-        if isinstance(payload, list):
-            return payload
         if isinstance(payload, dict):
-            data = payload.get("data") or payload.get("records") or payload.get("result") or []
-            return data if isinstance(data, list) else [data]
-        return []
+            payload = payload.get("data") or payload.get("records") or payload.get("result") or payload
+            
+        data = payload if isinstance(payload, list) else [payload]
+        
+        flat_records = []
+        for rec in data:
+            if isinstance(rec, dict):
+                list_fields = [k for k, v in rec.items() if isinstance(v, list)]
+                if len(list_fields) == 1 and list_fields[0] not in ("errors", "missing_fields"):
+                    flat_records.extend(rec[list_fields[0]])
+                else:
+                    flat_records.append(rec)
+            else:
+                flat_records.append(rec)
+        return flat_records
 
     def heal_scraper(self, collector_id: str, prompt: str, url: str) -> dict[str, Any]:
         return self._run(["scraper", "heal", collector_id, prompt, "--url", url, "--pretty"])
@@ -44,7 +54,15 @@ class BrightDataClient:
             shell=(os.name == 'nt')
         )
         if completed.returncode != 0:
-            raise RuntimeError(completed.stderr.strip() or completed.stdout.strip())
+            err = f"{completed.stdout}\n{completed.stderr}".strip()
+            if "status: 409" in err.lower() or "another refactor job is still in progress" in err.lower():
+                raise RuntimeError(
+                    "A heal operation is already in progress on Bright Data for this collector. "
+                    "Please wait a few minutes for it to complete."
+                )
+            if "Assertion failed:" in err:
+                err = err.split("Assertion failed:")[0].strip()
+            raise RuntimeError(err or "Bright Data CLI command failed unexpectedly.")
         output = completed.stdout.strip()
         if not output:
             return {}
