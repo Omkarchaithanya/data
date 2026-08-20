@@ -96,10 +96,21 @@ function App() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [forceRefresh, setForceRefresh] = useState(false);
+  const [healCooldown, setHealCooldown] = useState(0);
 
   useEffect(() => {
     void refresh();
   }, []);
+
+  useEffect(() => {
+    let interval: number;
+    if (healCooldown > 0) {
+      interval = window.setInterval(() => {
+        setHealCooldown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [healCooldown]);
 
   useEffect(() => {
     setRun(null);
@@ -376,8 +387,11 @@ function App() {
               <button onClick={async () => setRun(await call<RunResult>(`/sources/${selected}/detect-drift?mode=broken${forceRefresh ? '&max_retries=0' : ''}`))} disabled={loading || !realReady}>
                 <TriangleAlert size={16} /> Simulate Drift
               </button>
-              <button onClick={async () => setHeal(await call<HealResult>(`/sources/${selected}/heal${forceRefresh ? '?max_retries=0' : ''}`))} disabled={loading || !realReady}>
-                <Sparkles size={16} /> Generate Heal
+              <button onClick={async () => {
+                setHealCooldown(60);
+                setHeal(await call<HealResult>(`/sources/${selected}/heal${forceRefresh ? '?max_retries=0' : ''}`));
+              }} disabled={loading || !realReady || healCooldown > 0}>
+                <Sparkles size={16} /> {healCooldown > 0 ? `Next heal in ${healCooldown}s` : "Generate Heal"}
               </button>
               <button onClick={async () => { await call(`/sources/${selected}/approve-heal`); setHeal(null); }} disabled={loading || heal?.approval_status !== "ready"}>
                 <CheckCircle2 size={16} /> Approve
