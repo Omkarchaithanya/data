@@ -66,87 +66,8 @@ Open `http://localhost:5173` in your browser.
 
 ### Example Structured Output
 *This is real output, not a mock. Fetched dynamically via Bright Data Scraper Studio from `https://claude.com/pricing` using GroundTruth Guard.*
-```json
-[
-  {
-    "product_page_url": "https://claude.com/pricing",
-    "input": "https://claude.com/pricing",
-    "model_name": "Fable 5",
-    "input_price": "$10",
-    "output_price": "$50"
-  },
-  {
-    "product_page_url": "https://claude.com/pricing",
-    "input": "https://claude.com/pricing",
-    "model_name": "Opus 5",
-    "input_price": "$5",
-    "output_price": "$25"
-  },
-  {
-    "product_page_url": "https://claude.com/pricing",
-    "input": "https://claude.com/pricing",
-    "model_name": "Sonnet 5",
-    "input_price": "$2",
-    "output_price": "$10"
-  },
-  {
-    "product_page_url": "https://claude.com/pricing",
-    "input": "https://claude.com/pricing",
-    "model_name": "Haiku 4.5",
-    "input_price": "$1",
-    "output_price": "$5"
-  },
-  {
-    "product_page_url": "https://claude.com/pricing",
-    "input": "https://claude.com/pricing",
-    "model_name": "Opus 4.8",
-    "input_price": "$5",
-    "output_price": "$25"
-  },
-  {
-    "product_page_url": "https://claude.com/pricing",
-    "input": "https://claude.com/pricing",
-    "model_name": "Sonnet 4.6",
-    "input_price": "$3",
-    "output_price": "$15"
-  },
-  {
-    "product_page_url": "https://claude.com/pricing",
-    "input": "https://claude.com/pricing",
-    "model_name": "Opus 4.7",
-    "input_price": "$5",
-    "output_price": "$25"
-  },
-  {
-    "product_page_url": "https://claude.com/pricing",
-    "input": "https://claude.com/pricing",
-    "model_name": "Opus 4.6",
-    "input_price": "$5",
-    "output_price": "$25"
-  },
-  {
-    "product_page_url": "https://claude.com/pricing",
-    "input": "https://claude.com/pricing",
-    "model_name": "Sonnet 4.5",
-    "input_price": "$3",
-    "output_price": "$15"
-  },
-  {
-    "product_page_url": "https://claude.com/pricing",
-    "input": "https://claude.com/pricing",
-    "model_name": "Opus 4.5",
-    "input_price": "$5",
-    "output_price": "$25"
-  },
-  {
-    "product_page_url": "https://claude.com/pricing",
-    "input": "https://claude.com/pricing",
-    "model_name": "Opus 4.1",
-    "input_price": "$15",
-    "output_price": "$75"
-  }
-]
-```
+
+![Dashboard Overview](docs/e2e_mesh.png)
 
 ### E2E Dashboards 
 You can view E2E workflow capabilities below:
