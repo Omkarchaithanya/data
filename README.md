@@ -6,7 +6,7 @@ Content specialists and data teams spend hours manually verifying scraped produc
 
 ![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg) ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg) ![Built with Bright Data](https://img.shields.io/badge/Built_with-Bright_Data_Scraper_Studio-yellow.svg)
 
-> *[Placeholder: Drop your animated GIF or screenshot of the dashboard in action here (`docs/dashboard_demo.gif`)]*
+![Dashboard Overview](docs/e2e_mesh.png)
 
 ### What it does
 
@@ -67,7 +67,87 @@ Open `http://localhost:5173` in your browser.
 ### Example Structured Output
 *This is real output, not a mock. Fetched dynamically via Bright Data Scraper Studio from `https://claude.com/pricing` using GroundTruth Guard.*
 
-![Dashboard Overview](docs/e2e_mesh.png)
+```json
+[
+  {
+    "product_page_url": "https://claude.com/pricing",
+    "input": "https://claude.com/pricing",
+    "model_name": "Fable 5",
+    "input_price": "$10",
+    "output_price": "$50"
+  },
+  {
+    "product_page_url": "https://claude.com/pricing",
+    "input": "https://claude.com/pricing",
+    "model_name": "Opus 5",
+    "input_price": "$5",
+    "output_price": "$25"
+  },
+  {
+    "product_page_url": "https://claude.com/pricing",
+    "input": "https://claude.com/pricing",
+    "model_name": "Sonnet 5",
+    "input_price": "$2",
+    "output_price": "$10"
+  },
+  {
+    "product_page_url": "https://claude.com/pricing",
+    "input": "https://claude.com/pricing",
+    "model_name": "Haiku 4.5",
+    "input_price": "$1",
+    "output_price": "$5"
+  },
+  {
+    "product_page_url": "https://claude.com/pricing",
+    "input": "https://claude.com/pricing",
+    "model_name": "Opus 4.8",
+    "input_price": "$5",
+    "output_price": "$25"
+  },
+  {
+    "product_page_url": "https://claude.com/pricing",
+    "input": "https://claude.com/pricing",
+    "model_name": "Sonnet 4.6",
+    "input_price": "$3",
+    "output_price": "$15"
+  },
+  {
+    "product_page_url": "https://claude.com/pricing",
+    "input": "https://claude.com/pricing",
+    "model_name": "Opus 4.7",
+    "input_price": "$5",
+    "output_price": "$25"
+  },
+  {
+    "product_page_url": "https://claude.com/pricing",
+    "input": "https://claude.com/pricing",
+    "model_name": "Opus 4.6",
+    "input_price": "$5",
+    "output_price": "$25"
+  },
+  {
+    "product_page_url": "https://claude.com/pricing",
+    "input": "https://claude.com/pricing",
+    "model_name": "Sonnet 4.5",
+    "input_price": "$3",
+    "output_price": "$15"
+  },
+  {
+    "product_page_url": "https://claude.com/pricing",
+    "input": "https://claude.com/pricing",
+    "model_name": "Opus 4.5",
+    "input_price": "$5",
+    "output_price": "$25"
+  },
+  {
+    "product_page_url": "https://claude.com/pricing",
+    "input": "https://claude.com/pricing",
+    "model_name": "Opus 4.1",
+    "input_price": "$15",
+    "output_price": "$75"
+  }
+]
+```
 
 ### E2E Dashboards 
 You can view E2E workflow capabilities below:
