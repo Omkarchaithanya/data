@@ -41,7 +41,7 @@ type Drift = {
   drifted: boolean;
   structural: boolean;
   semantic: boolean;
-  changed_fields: string[];
+  changed_fields: { field: string; old: any; new: any }[];
   similarity: number;
   reasons: string[];
 };
@@ -92,31 +92,52 @@ function App() {
   const [heal, setHeal] = useState<HealResult | null>(null);
   const [events, setEvents] = useState<EventItem[]>([]);
   const [demoMode, setDemoMode] = useState(true);
-  const [budget, setBudget] = useState("");
+  const [budget, setBudget] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [forceRefresh, setForceRefresh] = useState(false);
 
   useEffect(() => {
     void refresh();
   }, []);
 
+  useEffect(() => {
+    setRun(null);
+    setHeal(null);
+  }, [selected]);
+
   async function refresh() {
     try {
-      const [sourceRes, eventRes, healthRes, budgetRes] = await Promise.all([
+      const [sourceRes, eventRes, healthRes] = await Promise.all([
         fetch(`${API_BASE}/sources`),
         fetch(`${API_BASE}/events`),
         fetch(`${API_BASE}/health`),
-        fetch(`${API_BASE}/budget`),
       ]);
       const loadedSources = (await sourceRes.json()) as Source[];
       const health = (await healthRes.json()) as Health;
-      const budgetData = (await budgetRes.json()) as Budget;
+      
       setSources(loadedSources);
       setEvents(await eventRes.json());
       setDemoMode(health.demo_mode);
-      setBudget(budgetData.balance);
     } catch (e) {
       setError("Failed to connect to API.");
+    }
+  }
+
+  async function checkBudget() {
+    try {
+      const globalBudgetRes = await fetch(`${API_BASE}/budget`);
+      const globalBudgetData = await globalBudgetRes.json();
+      
+      let newBudget = { ...budget };
+      if (globalBudgetRes.ok) {
+        newBudget['global'] = globalBudgetData.balance;
+      } else {
+        newBudget['global'] = "Budget unavailable — CLI error";
+      }
+      setBudget(newBudget);
+    } catch (e) {
+      setBudget({ ...budget, global: "Budget unavailable — CLI error" });
     }
   }
 
@@ -206,7 +227,9 @@ function App() {
         <div className="pulse-card">
           <span>{demoMode ? "Demo Mesh" : "Live Mesh"}</span>
           <strong>{sources.filter((source) => demoMode || source.collector_id).length || 0} sources ready</strong>
-          {budget && <div style={{ fontSize: "11px", opacity: 0.8, marginTop: "4px" }}>Budget: {budget}</div>}
+          <div style={{ fontSize: "11px", opacity: 0.8, marginTop: "4px", display: "flex", alignItems: "center", gap: "4px" }}>
+            Total Budget: {budget['global'] || <button onClick={checkBudget} style={{ padding: "2px 4px", fontSize: "10px", cursor: "pointer", background: "none", border: "1px solid #4ade80", color: "#4ade80", borderRadius: "4px" }}>Check</button>}
+          </div>
           <div className="pulse-line" />
         </div>
 
@@ -350,10 +373,10 @@ function App() {
               <button onClick={async () => setRun(await call<RunResult>(`/sources/${selected}/run?mode=healthy`))} disabled={loading || !realReady}>
                 <Play size={16} /> Run Healthy
               </button>
-              <button onClick={async () => setRun(await call<RunResult>(`/sources/${selected}/detect-drift?mode=broken`))} disabled={loading || !realReady}>
+              <button onClick={async () => setRun(await call<RunResult>(`/sources/${selected}/detect-drift?mode=broken${forceRefresh ? '&max_retries=0' : ''}`))} disabled={loading || !realReady}>
                 <TriangleAlert size={16} /> Simulate Drift
               </button>
-              <button onClick={async () => setHeal(await call<HealResult>(`/sources/${selected}/heal`))} disabled={loading || !realReady}>
+              <button onClick={async () => setHeal(await call<HealResult>(`/sources/${selected}/heal${forceRefresh ? '?max_retries=0' : ''}`))} disabled={loading || !realReady}>
                 <Sparkles size={16} /> Generate Heal
               </button>
               <button onClick={async () => { await call(`/sources/${selected}/approve-heal`); setHeal(null); }} disabled={loading || heal?.approval_status !== "ready"}>
@@ -362,6 +385,10 @@ function App() {
               <button onClick={async () => { await call(`/sources/${selected}/reject-heal`); setHeal(null); }} disabled={loading || heal?.approval_status !== "ready"} style={{ background: "rgba(239, 68, 68, 0.1)", color: "rgb(252, 165, 165)", borderColor: "rgba(239, 68, 68, 0.3)" }}>
                 Reject
               </button>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>
+                <input type="checkbox" checked={forceRefresh} onChange={e => setForceRefresh(e.target.checked)} />
+                Force Refresh (0 retries)
+              </label>
             </div>
 
             {heal?.next_step && (
@@ -410,7 +437,11 @@ function App() {
                       <div className="diff-fields">
                         <strong>Changed Fields:</strong>
                         <div className="diff-tags">
-                          {run.drift.changed_fields.map(f => <span key={f} className="diff-tag">{f}</span>)}
+                          {run.drift.changed_fields.map((f, idx) => (
+                            <span key={`${f.field}-${idx}`} className="diff-tag">
+                              {f.field}: {String(f.old)} ➔ {String(f.new)}
+                            </span>
+                          ))}
                         </div>
                       </div>
                     )}
