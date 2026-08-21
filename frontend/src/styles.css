@@ -289,7 +289,16 @@ h2 {
   position: relative;
   z-index: 1;
   padding: 18px;
-  box-shadow: 0 0 42px rgba(65, 229, 255, 0.16);
+  box-shadow: 0 0 20px rgba(102, 242, 165, 0.1), inset 0 0 15px rgba(102, 242, 165, 0.05);
+}
+
+.score::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: 8px;
+  background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(102, 242, 165, 0.04) 10px, rgba(102, 242, 165, 0.04) 11px);
+  pointer-events: none;
 }
 
 .score-orbit {
@@ -299,39 +308,100 @@ h2 {
   place-items: center;
   border-radius: 50%;
   background:
-    radial-gradient(circle, rgba(102, 242, 165, 0.2), transparent 58%),
-    conic-gradient(#66f2a5 calc(var(--score, 100) * 1%), rgba(255, 255, 255, 0.12) 0);
+    radial-gradient(circle, rgba(102, 242, 165, 0.15), transparent 65%),
+    conic-gradient(#66f2a5 calc(var(--score, 100) * 1%), rgba(102, 242, 165, 0.1) 0);
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5), 0 0 15px rgba(102, 242, 165, 0.2);
+  position: relative;
+}
+
+.score-orbit::after {
+  content: "";
+  position: absolute;
+  top: 12px; left: 12px; right: 12px; bottom: 12px;
+  background: #0b1220;
+  border-radius: 50%;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+  z-index: 0;
 }
 
 .score-orbit span {
   display: block;
-  font-size: 44px;
+  font-size: 38px;
   font-weight: 800;
-  color: #f7fff9;
-  text-shadow: 0 0 24px rgba(102, 242, 165, 0.45);
+  color: #66f2a5;
+  text-shadow: 0 0 15px rgba(102, 242, 165, 0.8);
+  font-family: monospace;
+  z-index: 1;
 }
 
 .score small {
   display: block;
   max-width: 140px;
   font-weight: 700;
-  color: #a7b7c9;
+  color: #66f2a5;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  text-shadow: 0 0 8px rgba(102, 242, 165, 0.4);
 }
 
 .score.warn {
   background:
     linear-gradient(#17130a, #17130a) padding-box,
-    conic-gradient(from 120deg, #ffd166, #41e5ff, #ffd166) border-box;
+    conic-gradient(from 120deg, #ffd166, #ff7b00, #ffd166) border-box;
   color: #fff5cf;
+  box-shadow: 0 0 20px rgba(255, 209, 102, 0.1), inset 0 0 15px rgba(255, 209, 102, 0.05);
+}
+.score.warn::before {
+  background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255, 209, 102, 0.04) 10px, rgba(255, 209, 102, 0.04) 11px);
+}
+.score.warn .score-orbit {
+  background:
+    radial-gradient(circle, rgba(255, 209, 102, 0.15), transparent 65%),
+    conic-gradient(#ffd166 calc(var(--score, 100) * 1%), rgba(255, 209, 102, 0.1) 0);
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 209, 102, 0.2);
+}
+.score.warn .score-orbit::after { background: #17130a; }
+.score.warn .score-orbit span {
+  color: #ffd166;
+  text-shadow: 0 0 15px rgba(255, 209, 102, 0.8);
+}
+.score.warn small {
+  color: #ffd166;
+  text-shadow: 0 0 8px rgba(255, 209, 102, 0.4);
 }
 
 .score.danger {
   background:
     linear-gradient(#180c10, #180c10) padding-box,
-    conic-gradient(from 120deg, #ff5b7a, #9e6cff, #ff5b7a) border-box;
+    conic-gradient(from 120deg, #ff5b7a, #ff0033, #ff5b7a) border-box;
   color: #ffe4ea;
+  box-shadow: 0 0 25px rgba(255, 91, 122, 0.15), inset 0 0 15px rgba(255, 91, 122, 0.08);
+}
+.score.danger::before {
+  background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255, 91, 122, 0.04) 10px, rgba(255, 91, 122, 0.04) 11px);
+}
+.score.danger .score-orbit {
+  background:
+    radial-gradient(circle, rgba(255, 91, 122, 0.15), transparent 65%),
+    conic-gradient(#ff5b7a calc(var(--score, 100) * 1%), rgba(255, 91, 122, 0.1) 0);
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 91, 122, 0.2);
+}
+.score.danger .score-orbit::after { background: #180c10; }
+.score.danger .score-orbit span {
+  color: #ff5b7a;
+  text-shadow: 0 0 15px rgba(255, 91, 122, 0.8);
+  animation: pulse-danger-text 2s infinite;
+}
+.score.danger small {
+  color: #ff5b7a;
+  text-shadow: 0 0 8px rgba(255, 91, 122, 0.4);
+  animation: pulse-danger-text 2s infinite;
+}
+
+@keyframes pulse-danger-text {
+  0% { opacity: 1; }
+  50% { opacity: 0.6; text-shadow: 0 0 25px rgba(255, 91, 122, 1); }
+  100% { opacity: 1; }
 }
 
 .actions {
