@@ -59,7 +59,7 @@ class BrightDataClient:
                     if isinstance(nested_item, dict):
                         flat_records.append({**parent_data, **nested_item})
                     else:
-                        flat_records.append(nested_item)
+                        flat_records.append({**parent_data, list_fields[0]: nested_item})
             else:
                 flat_records.append(rec)
                 

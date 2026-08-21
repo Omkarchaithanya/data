@@ -172,8 +172,15 @@ function App() {
     try {
       const response = await fetch(`${API_BASE}${path}`, { method: "POST" });
       if (!response.ok) {
-        const body = await response.json().catch(() => null);
-        throw new Error(body?.detail ?? (await response.text()));
+        const text = await response.text();
+        let detail = text;
+        try {
+          const json = JSON.parse(text);
+          if (json.detail) detail = json.detail;
+        } catch (e) {
+          // It's just plain text
+        }
+        throw new Error(detail || "Request failed");
       }
       const data = (await response.json()) as T;
       await refresh();
