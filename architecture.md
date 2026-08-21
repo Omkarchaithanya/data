@@ -7,93 +7,30 @@ GroundTruth Guard is an automated data fidelity platform that prevents silent we
 
 GroundTruth Guard follows a clean, decoupled architecture. The React frontend interacts with a FastAPI backend that acts as the command center. The backend orchestrates external extractions via Bright Data, evaluates data fidelity locally, and stores immutable state in an event-sourced SQLite database.
 
-### 1. Structural Architecture
-
 ```mermaid
-graph TB
-    subgraph Client
-        Dashboard[React Dashboard UI\n(Vite, TailwindCSS)]
-    end
-
-    subgraph GroundTruth Guard [FastAPI Application]
-        API[API Router\nrouters/api.py]
-        
-        subgraph Service Layer
-            Orchestrator[Workflow Engine\nworkflows.py]
-            Validator[Schema Validation\nvalidation.py]
-            DriftEngine[Drift Detection\ndrift.py]
-            HealthScorer[Health Scoring\nscoring.py]
-            HealPrompt[Prompt Builder\nprompt_builder.py]
-        end
-        
-        EventStore[(SQLite Event Store\nstorage.py)]
-    end
-
-    subgraph External Infrastructure
-        BDCLI[Bright Data Scraper Studio CLI]
-        BDAPI[Bright Data API / Workers]
-        TargetWeb[Target Websites]
-        LLM[Anthropic LLMs\n(via Bright Data)]
-    end
-
-    %% Client to Backend
-    Dashboard -- "HTTP REST" --> API
-    API --> Orchestrator
+flowchart LR
+    %% Main Extraction Flow
+    UI([React Frontend]) -->|Trigger Run| API[FastAPI\nrouters/api.py]
+    API --> Workflows[Workflow Engine\nworkflows.py]
     
-    %% Internal orchestration
-    Orchestrator --> Validator
-    Orchestrator --> DriftEngine
-    Orchestrator --> HealthScorer
-    Orchestrator --> HealPrompt
-    Orchestrator -- "Append Events" --> EventStore
+    Workflows -->|Fetch Live Data| BD[Bright Data\nScraper CLI]
+    BD -->|Raw JSON| Validation[Schema Validation\nvalidation.py]
+    Validation --> Drift[Drift Detection\ndrift.py]
+    Drift --> Scoring[Health Scoring\nscoring.py]
+    Scoring -->|Log Event| DB[(SQLite Store\nstorage.py)]
     
-    %% Backend to Infrastructure
-    Orchestrator -- "Execute sync/heal" --> BDCLI
-    BDCLI -.-> BDAPI
-    BDAPI -- "Extract Data" --> TargetWeb
-    BDAPI -- "Generate/Fix Schema" --> LLM
-
+    %% Distinct Self-Healing Branch
+    UI -.->|1. Generate Heal| Prompt[Prompt Builder\nprompt_builder.py]
+    Prompt -.->|2. AI Instructions| BD
+    BD -.->|3. Preview Data| Validation
+    Validation -.->|4. Awaiting Approval| UI
+    UI -.->|5. Approve Schema| Workflows
+    
+    %% Styling
     classDef core fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#fff;
     classDef infra fill:#1e293b,stroke:#94a3b8,stroke-width:2px,color:#fff;
-    class Orchestrator,Validator,DriftEngine,HealthScorer,HealPrompt core;
-    class EventStore,BDCLI,BDAPI,TargetWeb,LLM infra;
-```
-
-### 2. The Self-Healing Sequence
-
-The following sequence diagram illustrates the exact flow of data and control when structural drift is detected and a human operator initiates a self-healing cycle.
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor User
-    participant UI as Dashboard UI
-    participant Workflows as Workflow Engine
-    participant Prompts as Prompt Builder
-    participant BD as Bright Data CLI
-    
-    User->>UI: Click "Generate Heal"
-    UI->>Workflows: POST /heal
-    
-    Workflows->>Prompts: build_heal_prompt(drift_context)
-    Prompts-->>Workflows: LLM Instructions
-    
-    Workflows->>BD: Execute `bdata scraper heal`
-    Note over BD: AI reverse-engineers DOM,<br/>repairs schema, tests execution
-    BD-->>Workflows: Raw Nested Preview JSON
-    
-    Workflows->>Workflows: Flatten nested data into 1D claims
-    Workflows->>Workflows: validate_records(preview_data)
-    
-    Workflows-->>UI: Status: "awaiting_approval" (Preview Data)
-    
-    User->>UI: Review claims, click "Approve"
-    UI->>Workflows: POST /approve-heal
-    Workflows->>BD: Execute `bdata scraper approve`
-    Note over BD: Overwrites production schema
-    
-    Workflows->>Workflows: Append "approve" to EventStore
-    Workflows-->>UI: Source Healed (Status: Green)
+    class UI,API,Workflows,Validation,Drift,Scoring,Prompt core;
+    class BD,DB infra;
 ```
 
 ## Component Responsibilities
