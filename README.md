@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>🛡️ GroundTruth Guard</h1>
+  <h1>🛡️ Zeal</h1>
   <p><b>The Self-Healing Data Pipeline for Enterprise Web Scraping</b></p>
   
   <p>
@@ -30,9 +30,9 @@
 When a target website deploys a minor DOM update, traditional scrapers don't throw errors—they silently extract `null` values or scrape the wrong fields. Downstream databases become polluted with bad data, Machine Learning models are trained on garbage, and engineering teams spend 40% of their time playing whack-a-mole with broken parser scripts.
 
 ## The Solution
-**GroundTruth Guard** is an automated data fidelity platform that prevents silent website changes from ever reaching your production database. 
+**Zeal** is an automated data fidelity platform that prevents silent website changes from ever reaching your production database. 
 
-It turns fragile, hard-coded scrapers into **resilient, self-healing workflows**. By orchestrating extractions through Bright Data Scraper Studio, GroundTruth Guard detects structural drift in real-time, quarantines anomalous data, and uses AI to automatically reverse-engineer and generate repaired scraper code for 1-click human approval.
+It turns fragile, hard-coded scrapers into **resilient, self-healing workflows**. By orchestrating extractions through Bright Data Scraper Studio, Zeal detects structural drift in real-time, quarantines anomalous data, and uses AI to automatically reverse-engineer and generate repaired scraper code for 1-click human approval.
 
 Never publish a claim without proof. Never let bad data poison your systems.
 
@@ -44,7 +44,7 @@ Never publish a claim without proof. Never let bad data poison your systems.
 Automated evaluation compares live extractions against strict YAML schemas and historical snapshots. We catch **structural drift** (missing fields) and **semantic drift** (e.g., a `$10` price suddenly parsing as `$100`) before they enter your database.
 
 ### 🤖 AI-Powered Self-Healing
-When a scraper breaks, the system doesn't just alert you—it fixes it. GroundTruth Guard automatically analyzes the failure context, queries the target's new DOM structure, and leverages Anthropic LLMs to generate a fully repaired extraction schema. 
+When a scraper breaks, the system doesn't just alert you—it fixes it. Zeal automatically analyzes the failure context, queries the target's new DOM structure, and leverages Anthropic LLMs to generate a fully repaired extraction schema. 
 
 ### 👨‍💻 Human-in-the-Loop Security
 AI is powerful, but production data requires certainty. Repaired scrapers are executed in a sandbox, and the resulting data is presented in a "Heal Preview." **Nothing is deployed to production until a human clicks "Approve."**
@@ -64,8 +64,8 @@ Every single field extracted carries a cryptographic lineage: a source URL, an e
 
 ### 1. Clone & Configure
 ```bash
-git clone https://github.com/Omkarchaithanya/data.git groundtruth-guard
-cd groundtruth-guard
+git clone https://github.com/Omkarchaithanya/data.git zeal-monitor
+cd zeal-monitor
 
 # Configure environment variables
 echo "BRIGHTDATA_API_KEY=your_bright_data_api_key_here" > .env
@@ -97,7 +97,7 @@ Navigate to **`http://localhost:5173`** in your browser to access the command ce
 
 Enterprise data systems require granular verifiable claims. Deeply nested JSON structures make it nearly impossible to track the health of individual data points over time. 
 
-GroundTruth Guard enforces a **flat, entity-focused data structure**. This allows the Trust Ledger to hash, track, and score individual claims independently.
+Zeal enforces a **flat, entity-focused data structure**. This allows the Trust Ledger to hash, track, and score individual claims independently.
 
 <details>
 <summary><b>View Data Structure Comparison (Click to expand)</b></summary>
@@ -115,7 +115,7 @@ GroundTruth Guard enforces a **flat, entity-focused data structure**. This allow
 }
 ```
 
-**✅ Good (Flattened approach - utilized by GroundTruth Guard):**
+**✅ Good (Flattened approach - utilized by Zeal):**
 ```json
 {
   "product_page_url": "https://claude.com/pricing",
@@ -131,7 +131,7 @@ GroundTruth Guard enforces a **flat, entity-focused data structure**. This allow
 
 ## 📊 E2E Dashboards 
 
-Explore the capabilities of the GroundTruth Guard command center:
+Explore the capabilities of the Zeal command center:
 
 | Mesh Overview | Drift Detection | AI Self-Healing |
 |:---:|:---:|:---:|
@@ -158,4 +158,4 @@ Explore the capabilities of the GroundTruth Guard command center:
 *This project was developed with the assistance of Claude Code acting as a coding agent. All AI-generated code, architectural decisions, and integrations were directed, extensively reviewed, and rigorously tested by the participating developer to meet the requirements of the **Into the Scrape-Verse** hackathon (Rule 11 compliance).*
 
 ### Demo Video
-[🔗 Watch the 3-minute GroundTruth Guard Demo](https://youtube.com/placeholder-link)
+[🔗 Watch the 3-minute Zeal Demo](https://youtube.com/placeholder-link)

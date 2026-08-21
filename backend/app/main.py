@@ -7,7 +7,7 @@ from fastapi.responses import HTMLResponse
 from backend.app.routers.api import router
 
 
-app = FastAPI(title="GroundTruth Guard API", version="0.1.0")
+app = FastAPI(title="Zeal API", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -37,7 +37,7 @@ async def root() -> str:
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>GroundTruth Guard API</title>
+        <title>Zeal API</title>
         <style>
           body {
             margin: 0;
@@ -77,7 +77,7 @@ async def root() -> str:
       </head>
       <body>
         <main>
-          <h1>GroundTruth Guard API</h1>
+          <h1>Zeal API</h1>
           <p>The backend is running. Open the dashboard for the product UI, or inspect the API routes below.</p>
           <a href="http://127.0.0.1:4173/">Open Dashboard</a>
           <a class="secondary" href="/docs">API Docs</a>

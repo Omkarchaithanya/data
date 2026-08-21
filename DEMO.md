@@ -1,11 +1,11 @@
-# GroundTruth Guard Demo Runbook
+# Zeal Demo Runbook
 
-This guide outlines the exact, step-by-step flow to demonstrate the value of GroundTruth Guard. 
+This guide outlines the exact, step-by-step flow to demonstrate the value of Zeal. 
 
 ## 1. The Global Overview
 - **Action**: Navigate to the **Mesh Overview** tab.
 - **Expectation**: Show the aggregate health score, SLA staleness indicators (FRESH/STALE badges), and the real-time budget widget.
-- **Pitch Point**: This is the command center. Unlike traditional dashboards that only show if a scraper *ran*, GroundTruth Guard shows if the data is *trustworthy*.
+- **Pitch Point**: This is the command center. Unlike traditional dashboards that only show if a scraper *ran*, Zeal shows if the data is *trustworthy*.
 
 ## 2. Proving Live Extraction
 - **Action**: Navigate to **Anthropic Pricing**. Click **Run Healthy**.

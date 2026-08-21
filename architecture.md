@@ -1,11 +1,11 @@
 # Architecture
 
 ## Overview
-GroundTruth Guard is an automated data fidelity platform that prevents silent website changes from polluting downstream databases. It orchestrates Bright Data Scraper Studio extractions, validates schemas and detects drift on live data, and provides a human-in-the-loop self-healing mechanism to automatically repair broken scrapers using AI without dropping data quality.
+Zeal is an automated data fidelity platform that prevents silent website changes from polluting downstream databases. It orchestrates Bright Data Scraper Studio extractions, validates schemas and detects drift on live data, and provides a human-in-the-loop self-healing mechanism to automatically repair broken scrapers using AI without dropping data quality.
 
 ## System Architecture
 
-GroundTruth Guard follows a clean, decoupled architecture. The React frontend interacts with a FastAPI backend that acts as the command center. The backend orchestrates external extractions via Bright Data, evaluates data fidelity locally, and stores immutable state in an event-sourced SQLite database.
+Zeal follows a clean, decoupled architecture. The React frontend interacts with a FastAPI backend that acts as the command center. The backend orchestrates external extractions via Bright Data, evaluates data fidelity locally, and stores immutable state in an event-sourced SQLite database.
 
 ### 1. Structural Architecture
 
@@ -15,7 +15,7 @@ graph TB
         Dashboard[React Dashboard UI\n(Vite, TailwindCSS)]
     end
 
-    subgraph GroundTruth Guard [FastAPI Application]
+    subgraph Zeal [FastAPI Application]
         API[API Router\nrouters/api.py]
         
         subgraph Service Layer
