@@ -37,7 +37,7 @@ class DriftResult:
     drifted: bool
     structural: bool
     semantic: bool
-    changed_fields: list[str] = field(default_factory=list)
+    changed_fields: list[dict[str, Any]] = field(default_factory=list)
     similarity: float = 1.0
     content_hash: str = ""
     previous_hash: str | None = None

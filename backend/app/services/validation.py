@@ -20,19 +20,28 @@ def validate_records(source: Source, records: list[dict[str, Any]]) -> Validatio
             errors=["Collector returned no records."],
         )
 
-    missing_fields: set[str] = set()
+    fields_present: set[str] = set()
+    for record in records:
+        fields_present.update(record.keys())
+    missing_fields = set(source.expected_fields) - fields_present
+
     null_fields = {field: 0 for field in source.expected_fields}
     total_checks = len(records) * len(source.expected_fields)
     null_checks = 0
 
     for record in records:
         for field in source.expected_fields:
-            if field not in record:
-                missing_fields.add(field)
+            if field in missing_fields:
                 null_fields[field] += 1
                 null_checks += 1
                 continue
+            
             value = record.get(field)
+            if value is None or field not in record:
+                null_fields[field] += 1
+                null_checks += 1
+                continue
+                
             try:
                 if value in NULL_VALUES:
                     null_fields[field] += 1

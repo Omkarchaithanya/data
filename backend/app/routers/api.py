@@ -50,9 +50,9 @@ async def run_source(source_id: str, mode: str = Query("healthy")) -> dict:
 
 
 @router.post("/sources/{source_id}/detect-drift")
-async def detect_drift(source_id: str, mode: str = Query("broken")) -> dict:
+async def detect_drift(source_id: str, mode: str = Query("broken"), max_retries: int | None = Query(None)) -> dict:
     try:
-        return asdict(service.detect_source_drift(source_id, mode))
+        return asdict(service.detect_source_drift(source_id, mode, max_retries=max_retries))
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except RuntimeError as exc:
@@ -60,9 +60,9 @@ async def detect_drift(source_id: str, mode: str = Query("broken")) -> dict:
 
 
 @router.post("/sources/{source_id}/heal")
-async def heal(source_id: str) -> dict:
+async def heal(source_id: str, max_retries: int | None = Query(None)) -> dict:
     try:
-        return asdict(service.heal_source(source_id))
+        return asdict(service.heal_source(source_id, max_retries=max_retries))
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except RuntimeError as exc:
@@ -90,13 +90,21 @@ async def reject(source_id: str) -> dict:
 
 
 @router.get("/budget")
-async def get_budget() -> dict:
-    return service.get_budget()
+async def get_budget(source_id: str | None = Query(None)) -> dict:
+    try:
+        return service.get_budget(source_id=source_id)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
 
 
 @router.get("/export")
 async def export_data() -> dict:
     return service.export_data()
+
+
+@router.get("/export/trust-ledger")
+async def export_trust_ledger() -> dict:
+    return service.export_trust_ledger()
 
 
 @router.get("/events")

@@ -16,6 +16,7 @@ import {
   Info
 } from "lucide-react";
 import "./styles.css";
+import "./cyberpunk.css";
 
 type Source = {
   id: string;
@@ -83,6 +84,15 @@ type Health = {
   demo_mode: boolean;
 };
 
+type TrustLedgerClaim = {
+  claim: string;
+  source_url: string;
+  verified_at: string;
+  extractor_version: string;
+  confidence_score: number;
+  status: string;
+};
+
 const API_BASE = import.meta.env.VITE_API_BASE ?? "http://127.0.0.1:8000";
 
 function App() {
@@ -97,6 +107,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [forceRefresh, setForceRefresh] = useState(false);
   const [healCooldown, setHealCooldown] = useState(0);
+  const [trustLedger, setTrustLedger] = useState<TrustLedgerClaim[]>([]);
 
   useEffect(() => {
     void refresh();
@@ -119,17 +130,20 @@ function App() {
 
   async function refresh() {
     try {
-      const [sourceRes, eventRes, healthRes] = await Promise.all([
+      const [sourceRes, eventRes, healthRes, ledgerRes] = await Promise.all([
         fetch(`${API_BASE}/sources`),
         fetch(`${API_BASE}/events`),
         fetch(`${API_BASE}/health`),
+        fetch(`${API_BASE}/export/trust-ledger`)
       ]);
       const loadedSources = (await sourceRes.json()) as Source[];
       const health = (await healthRes.json()) as Health;
+      const ledger = (await ledgerRes.json()) as { trust_ledger: TrustLedgerClaim[] };
       
       setSources(loadedSources);
       setEvents(await eventRes.json());
       setDemoMode(health.demo_mode);
+      setTrustLedger(ledger.trust_ledger);
     } catch (e) {
       setError("Failed to connect to API.");
     }
@@ -173,7 +187,7 @@ function App() {
   }
 
   const selectedSource = useMemo(() => sources.find((source) => source.id === selected), [selected, sources]);
-  const realReady = demoMode || Boolean(selectedSource?.collector_id);
+  const realReady = demoMode || selectedSource?.id === "canary_vendor" || Boolean(selectedSource?.collector_id);
   const health = run?.health_score ?? 100;
   const riskLabel = health < 60 ? "Critical drift" : health < 90 ? "Watch closely" : "Grounded";
   const activeEvents = selected === "overview" ? events : events.filter((event) => event.source_id === selected);
@@ -205,6 +219,16 @@ function App() {
     const score = latestHealthScores[s.id];
     return score !== undefined && score < 100;
   });
+
+  const staleSources = useMemo(() => {
+    return sources.filter(s => {
+      const sourceEvents = events.filter(e => e.source_id === s.id);
+      const latestRun = sourceEvents.find(e => e.kind === "run");
+      if (!latestRun) return false;
+      const hoursSinceCheck = (Date.now() - new Date(latestRun.timestamp).getTime()) / (1000 * 60 * 60);
+      return hoursSinceCheck > s.sla_hours;
+    });
+  }, [sources, events]);
 
   async function handleExport() {
     try {
@@ -256,57 +280,140 @@ function App() {
             </span>
           </button>
           
-          {sources.map((source) => (
-            <button
-              className={source.id === selected ? "active" : ""}
-              key={source.id}
-              onClick={() => { setSelected(source.id); setRun(null); setHeal(null); }}
-            >
-              <Radar size={16} />
-              <span>
-                <strong>{source.name}</strong>
-                <small>
-                  {source.type} · {source.expected_fields.length} fields
-                </small>
-                <div className="badge-row">
-                  {demoMode ? <span className="badge demo">DEMO</span> : source.collector_id ? <span className="badge live">LIVE</span> : <span className="badge setup">SETUP</span>}
-                </div>
-              </span>
-            </button>
-          ))}
+          <button
+            className={selected === "trust-ledger" ? "active" : ""}
+            onClick={() => { setSelected("trust-ledger"); setRun(null); setHeal(null); }}
+          >
+            <ShieldCheck size={16} />
+            <span>
+              <strong>Trust Ledger</strong>
+              <small>Verified claims</small>
+            </span>
+          </button>
+          
+          {sources.map((source) => {
+            const sourceEvents = events.filter(e => e.source_id === source.id);
+            const latestRun = sourceEvents.find(e => e.kind === "run");
+            const isStale = staleSources.some(s => s.id === source.id);
+
+            return (
+              <button
+                className={source.id === selected ? "active" : ""}
+                key={source.id}
+                onClick={() => { setSelected(source.id); setRun(null); setHeal(null); }}
+              >
+                <Radar size={16} />
+                <span>
+                  <strong>{source.name}</strong>
+                  <small>
+                    {source.type} · {source.expected_fields.length} fields
+                  </small>
+                  <div className="badge-row">
+                    {demoMode ? <span className="badge demo">DEMO</span> : source.collector_id ? <span className="badge live">LIVE</span> : <span className="badge setup">SETUP</span>}
+                    {latestRun && (
+                      <span className={`badge ${isStale ? "setup" : "live"}`}>
+                        {isStale ? "STALE" : "FRESH"}
+                      </span>
+                    )}
+                  </div>
+                </span>
+              </button>
+            );
+          })}
         </nav>
       </aside>
 
       <section className="workspace">
-        {selected === "overview" ? (
-          <div className="overview">
+        {selected === "trust-ledger" ? (
+          <div className="trust-ledger">
             <header className="hero">
+              <div className="hero-copy">
+                <p className="eyebrow">Data Provenance</p>
+                <h2>Trust Ledger</h2>
+                <p className="url">Independently verified claims ready for publication</p>
+                <div style={{ marginTop: "1rem" }}>
+                  <button onClick={handleExport} className="export-btn" style={{ padding: "0.5rem 1rem", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "4px", color: "white", cursor: "pointer" }}>
+                    Export Raw Evidence (JSON)
+                  </button>
+                </div>
+              </div>
+            </header>
+            
+            <section className="ledger-cards" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              {trustLedger.length === 0 ? (
+                <p className="muted">No verified claims found. Run a source first.</p>
+              ) : (
+                trustLedger.map((claim, idx) => (
+                  <div key={idx} style={{ background: "rgba(8,12,22,0.8)", border: "1px solid rgba(132,171,255,0.18)", borderRadius: "8px", padding: "1.5rem" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.75rem" }}>
+                      <strong style={{ fontSize: "1.1rem", color: "#f7fbff" }}>{claim.claim}</strong>
+                      <span className={`badge ${claim.status === "grounded" ? "live" : claim.status === "at-risk" ? "demo" : "setup"}`}>
+                        {claim.status.toUpperCase()}
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", gap: "1.5rem", fontSize: "0.85rem", color: "#8f9bad" }}>
+                      <span><strong>Source:</strong> {claim.source_url}</span>
+                      <span><strong>Verified:</strong> {new Date(claim.verified_at).toLocaleString()}</span>
+                      <span><strong>Score:</strong> {claim.confidence_score}/100</span>
+                      <span><strong>Extractor:</strong> {claim.extractor_version}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </section>
+          </div>
+        ) : selected === "overview" ? (
+          <div className="overview">
+            <header className="hero" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div className="hero-copy">
                 <p className="eyebrow">Grounding intelligence console</p>
                 <h2>Mesh Overview</h2>
                 <p className="url">{sources.length} total sources monitored</p>
                 <div style={{ marginTop: "1rem" }}>
-                  <button onClick={handleExport} className="export-btn" style={{ padding: "0.5rem 1rem", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "4px", color: "white", cursor: "pointer" }}>
+                  <button onClick={handleExport} className="action-btn" style={{ padding: "0.5rem 1rem", background: "rgba(0, 240, 255, 0.1)", border: "1px solid var(--cp-cyan)", color: "var(--cp-cyan)", cursor: "pointer" }}>
                     Export RAG Evidence
                   </button>
+                </div>
+              </div>
+              <div className="gauge-container">
+                <div className="gauge-circle">
+                  <h2>{Math.round(sources.reduce((acc, s) => acc + (latestHealthScores[s.id] ?? 100), 0) / (sources.length || 1))}</h2>
                 </div>
               </div>
             </header>
 
             {atRiskSources.length > 0 && (
-              <section className="at-risk-section" style={{ margin: "2rem", padding: "1rem", background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.3)", borderRadius: "8px" }}>
-                <h3 style={{ color: "rgb(252, 165, 165)", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  <TriangleAlert size={18} /> At-Risk Citations
-                </h3>
+              <Panel className="at-risk-panel" title="At-Risk Citations" icon={<TriangleAlert size={18} />}>
                 <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                   {atRiskSources.map(s => (
                     <li key={s.id} style={{ display: "flex", justifyContent: "space-between", background: "rgba(0,0,0,0.2)", padding: "0.75rem", borderRadius: "4px" }}>
                       <strong>{s.name}</strong>
-                      <span style={{ color: "rgb(252, 165, 165)" }}>Score: {latestHealthScores[s.id]}</span>
+                      <span style={{ color: "var(--cp-magenta)", display: "flex", alignItems: "center", gap: "8px" }}>
+                        <Activity size={14} /> Score: {latestHealthScores[s.id]}
+                      </span>
                     </li>
                   ))}
                 </ul>
-              </section>
+              </Panel>
+            )}
+
+            {staleSources.length > 0 && (
+              <Panel className="stale-panel" title="Stale Citations (SLA Exceeded)" icon={<CheckCircle2 size={18} />}>
+                <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                  {staleSources.map(s => {
+                    const latestRun = events.find(e => e.source_id === s.id && e.kind === "run");
+                    const hours = latestRun ? Math.round((Date.now() - new Date(latestRun.timestamp).getTime()) / 3600000) : 0;
+                    return (
+                      <li key={s.id} style={{ display: "flex", justifyContent: "space-between", background: "rgba(0,0,0,0.2)", padding: "0.75rem", borderRadius: "4px" }}>
+                        <strong>{s.name}</strong>
+                        <span style={{ color: "var(--cp-magenta)", display: "flex", alignItems: "center", gap: "8px" }}>
+                          <CheckCircle2 size={14} /> {hours}h since check (SLA: {s.sla_hours}h)
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </Panel>
             )}
 
             <section className="events">
@@ -381,27 +488,27 @@ function App() {
             {error && <div className="notice danger-notice">{error}</div>}
 
             <div className="actions">
-              <button onClick={async () => setRun(await call<RunResult>(`/sources/${selected}/run?mode=healthy`))} disabled={loading || !realReady}>
+              <button className="primary run-healthy" onClick={async () => setRun(await call<RunResult>(`/sources/${selected}/run?mode=healthy`))} disabled={loading || !realReady}>
                 <Play size={16} /> Run Healthy
               </button>
-              <button onClick={async () => setRun(await call<RunResult>(`/sources/${selected}/detect-drift?mode=broken${forceRefresh ? '&max_retries=0' : ''}`))} disabled={loading || !realReady}>
+              <button className="primary run-drift" onClick={async () => setRun(await call<RunResult>(`/sources/${selected}/detect-drift?mode=broken${forceRefresh ? '&max_retries=0' : ''}`))} disabled={loading || !realReady}>
                 <TriangleAlert size={16} /> Simulate Drift
               </button>
-              <button onClick={async () => {
+              <button className="primary heal-btn" onClick={async () => {
                 setHealCooldown(60);
                 setHeal(await call<HealResult>(`/sources/${selected}/heal${forceRefresh ? '?max_retries=0' : ''}`));
               }} disabled={loading || !realReady || healCooldown > 0}>
                 <Sparkles size={16} /> {healCooldown > 0 ? `Next heal in ${healCooldown}s` : "Generate Heal"}
               </button>
-              <button onClick={async () => { await call(`/sources/${selected}/approve-heal`); setHeal(null); }} disabled={loading || heal?.approval_status !== "ready"}>
+              <button className="primary approve-btn" onClick={async () => { await call(`/sources/${selected}/approve-heal`); setHeal(null); }} disabled={loading || heal?.approval_status !== "ready"}>
                 <CheckCircle2 size={16} /> Approve
               </button>
-              <button onClick={async () => { await call(`/sources/${selected}/reject-heal`); setHeal(null); }} disabled={loading || heal?.approval_status !== "ready"} style={{ background: "rgba(239, 68, 68, 0.1)", color: "rgb(252, 165, 165)", borderColor: "rgba(239, 68, 68, 0.3)" }}>
-                Reject
+              <button className="primary reject-btn" onClick={async () => { await call(`/sources/${selected}/reject-heal`); setHeal(null); }} disabled={loading || heal?.approval_status !== "ready"}>
+                <TriangleAlert size={16} /> Reject
               </button>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: 'var(--cp-cyan)' }}>
                 <input type="checkbox" checked={forceRefresh} onChange={e => setForceRefresh(e.target.checked)} />
-                Force Refresh (0 retries)
+                Force Refresh
               </label>
             </div>
 
@@ -493,23 +600,24 @@ function App() {
   );
 }
 
-function Panel({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
+function Panel({ title, icon, children, className = "" }: { title: string; icon: React.ReactNode; children: React.ReactNode; className?: string }) {
   return (
-    <article className="panel">
-      <div className="panel-title">
+    <article className={`panel ${className}`}>
+      <div className="panel-header">
         {icon}
         <h3>{title}</h3>
       </div>
-      {children}
+      <div className="panel-content">{children}</div>
     </article>
   );
 }
 
-function Metric({ label, value }: { label: string; value: React.ReactNode }) {
+function Metric({ label, value, isError = false }: { label: string; value: React.ReactNode; isError?: boolean }) {
   return (
-    <div className="metric">
+    <div className={`metric ${isError ? 'metric-error' : ''}`}>
       <span>{label}</span>
-      <strong>{value}</strong>
+      <div className="metric-value">{value}</div>
+      <div className="sparkline" />
     </div>
   );
 }

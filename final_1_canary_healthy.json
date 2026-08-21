@@ -1,0 +1,32 @@
+{
+  "source_id": "canary_vendor",
+  "timestamp": "2026-08-21T10:23:20.910023+05:30",
+  "records": [
+    {
+      "model_name": "GroundTruth Mini",
+      "input_price": "$0.25 / 1M tokens",
+      "output_price": "$1.00 / 1M tokens",
+      "effective_date": "2026-08-17"
+    }
+  ],
+  "validation": {
+    "valid": true,
+    "row_count": 1,
+    "missing_fields": [],
+    "null_fields": {},
+    "null_rate": 0.0,
+    "errors": []
+  },
+  "drift": {
+    "drifted": false,
+    "structural": false,
+    "semantic": false,
+    "changed_fields": [],
+    "similarity": 1.0,
+    "content_hash": "3102da2ca8ebfc5f7c620e66e6a482d0c257a94b3daf7fd13608ae1b83206c9b",
+    "previous_hash": "3102da2ca8ebfc5f7c620e66e6a482d0c257a94b3daf7fd13608ae1b83206c9b",
+    "reasons": []
+  },
+  "health_score": 100,
+  "raw_output_path": null
+}

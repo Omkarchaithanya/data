@@ -20,5 +20,5 @@ def test_heal_prompt_includes_context():
     assert "http://localhost/canary/v2" in prompt
     assert "model_name" in prompt
     assert "input_price" in prompt
-    assert "Preserve the current output schema" in prompt
+    assert "Preserve field names exactly" in prompt
 

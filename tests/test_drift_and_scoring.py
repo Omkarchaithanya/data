@@ -30,7 +30,7 @@ def test_semantic_change_detected_against_prior_snapshot():
     drift = detect_drift(SOURCE, current, validation, previous)
 
     assert drift.semantic is True
-    assert "input_price" in drift.changed_fields
+    assert any(f["field"] == "input_price" for f in drift.changed_fields)
 
 
 def test_healthy_source_achieves_perfect_score_uncapped_by_weight():

@@ -1,0 +1,148 @@
+{
+  "source_id": "anthropic_news",
+  "timestamp": "2026-08-21T10:23:41.481795+05:30",
+  "records": [
+    {
+      "title": "Our position on open-weights models",
+      "url": "https://www.anthropic.com/news/position-open-weights-models",
+      "published_date": "2026-07-27T00:00:00Z",
+      "summary": "A post by Dario Amodei, Anthropic CEO",
+      "input": "https://www.anthropic.com/news"
+    },
+    {
+      "title": "Introducing Claude Sonnet 5",
+      "url": "https://www.anthropic.com/news/claude-sonnet-5",
+      "published_date": "2026-06-30T00:00:00Z",
+      "summary": "Claude Sonnet 5 is built to be the most agentic Sonnet model yet. It can make plans, use tools like browsers and terminals, and run autonomously at a level that, just a few months ago, required larger and more expensive models.",
+      "input": "https://www.anthropic.com/news"
+    },
+    {
+      "title": "Inviting hard questions",
+      "url": "https://www.anthropic.com/news/hard-questions",
+      "published_date": "2026-07-09T00:00:00Z",
+      "summary": "Who decides the rules for AI?",
+      "input": "https://www.anthropic.com/news"
+    },
+    {
+      "title": "Anthropic is donating another $20 million to Public First Action",
+      "url": "https://www.anthropic.com/news/donation-public-first-action",
+      "published_date": "2026-07-21T00:00:00Z",
+      "summary": "We're contributing an additional $20 million to Public First Action , bringing our total support to $40 million. Public First Action is a nonpartisan organization that educates the public about AI and works with Republicans, Democrats, and Independents who are serious about putting sensible AI safeguards in place. Both of our donations were made exclusively to support Public First Action’s public education and policy mission, and cannot be used to influence the election of any candidate for federal, state, or local office.",
+      "input": "https://www.anthropic.com/news"
+    },
+    {
+      "title": "Cognizant and Anthropic expand their partnership to bring Claude to enterprise clients",
+      "url": "https://www.anthropic.com/news/cognizant-anthropic",
+      "published_date": "2026-07-27T00:00:00Z",
+      "summary": "We're expanding our partnership with Cognizant , one of the world's largest technology services companies.",
+      "input": "https://www.anthropic.com/news"
+    },
+    {
+      "title": "Introducing Claude Opus 5",
+      "url": "https://www.anthropic.com/news/claude-opus-5",
+      "published_date": "2026-07-24T00:00:00Z",
+      "summary": "Claude Opus 5 is available today. It’s a thoughtful and proactive model that comes close to the frontier intelligence of Claude Fable 5 at half the price.",
+      "input": "https://www.anthropic.com/news"
+    },
+    {
+      "url": "https://www.anthropic.com/features/making-of-claude-code",
+      "input": "https://www.anthropic.com/news"
+    },
+    {
+      "title": "Mariano-Florentino (Tino) Cuéllar to join Anthropic as Chief Global Affairs Officer",
+      "url": "https://www.anthropic.com/news/tino-cuellar",
+      "published_date": "2026-08-04T00:00:00Z",
+      "summary": "Mariano-Florentino (Tino) Cuéllar will join Anthropic as its first Chief Global Affairs Officer, leading the company’s work on policy, strategic international engagement, and government relationships worldwide.",
+      "input": "https://www.anthropic.com/news"
+    },
+    {
+      "title": "How Claude’s text watermark works",
+      "url": "https://www.anthropic.com/news/claude-text-watermark",
+      "published_date": "2026-08-14T00:00:00Z",
+      "summary": "Future Claude models will generate text that contains a watermark. This is a way of determining the likelihood that Claude was involved in writing the text, and we, along with several other major AI providers, are implementing this change to comply with the EU AI Act.",
+      "input": "https://www.anthropic.com/news"
+    },
+    {
+      "title": "A research agenda for the Economic Futures Research Fund",
+      "url": "https://www.anthropic.com/news/economic-futures-research-fund-agenda",
+      "published_date": "2026-07-22T00:00:00Z",
+      "summary": "We’re sharing the research agenda for the Anthropic Economic Futures Research Fund. We’re committing $200 million to the fund to support ambitious external research on interventions to prepare society for the economic impacts of AI.",
+      "input": "https://www.anthropic.com/news"
+    },
+    {
+      "title": "Investigating three real-world incidents in our cybersecurity evaluations",
+      "url": "https://www.anthropic.com/news/investigating-incidents-cybersecurity-evals",
+      "published_date": "2026-07-30T00:00:00Z",
+      "summary": "In a review of our cybersecurity evaluation transcripts, we found three incidents in which a Claude model reached the internet from within or while interacting with a third-party evaluation environment, and then gained unauthorized access to the real systems of three different organizations.",
+      "input": "https://www.anthropic.com/news"
+    },
+    {
+      "title": "Redeploying Fable 5",
+      "url": "https://www.anthropic.com/news/redeploying-fable-5",
+      "published_date": "2026-06-30T00:00:00Z",
+      "summary": "On Friday, June 12, the US government applied export controls to our newest models, Claude Fable 5 and Claude Mythos 5. This required us to restrict access to foreign nationals, whether inside or outside the United States. Because the order took effect immediately and we had no reliable way to verify nationality in real-time, we suspended access to both models for all users.",
+      "input": "https://www.anthropic.com/news"
+    },
+    {
+      "title": "Improving Fable 5's biology safeguards",
+      "url": "https://www.anthropic.com/news/improving-fable-5-s-biology-safeguards",
+      "published_date": "2026-08-07T00:00:00Z",
+      "summary": "We’re making updates to Claude Fable 5’s biology safeguards in a way that substantially reduces false positives. Fable 5 users will now experience many fewer “fallbacks”—where the system switches to a less capable model after they make a biology-related query. In our testing, this update reduced biology-related fallbacks by about 85% across our product surfaces. 1",
+      "input": "https://www.anthropic.com/news"
+    },
+    {
+      "title": "Ask Claude about the Anthropic Economic Index",
+      "url": "https://www.anthropic.com/news/anthropic-economic-index-connector",
+      "published_date": "2026-07-22T00:00:00Z",
+      "summary": "People have hard questions about AI and work: which jobs will change, which tasks are being automated, and what it means for their own field. The Anthropic Economic Index exists to help answer them with real data. Today we're launching the Anthropic Economic Index connector for Claude, which lets anyone explore that data directly.",
+      "input": "https://www.anthropic.com/news"
+    }
+  ],
+  "validation": {
+    "valid": true,
+    "row_count": 14,
+    "missing_fields": [],
+    "null_fields": {
+      "title": 1,
+      "published_date": 1,
+      "summary": 1
+    },
+    "null_rate": 0.0536,
+    "errors": []
+  },
+  "drift": {
+    "drifted": true,
+    "structural": false,
+    "semantic": true,
+    "changed_fields": [
+      {
+        "field": "title",
+        "old": "Introducing Claude Opus 5",
+        "new": "Our position on open-weights models"
+      },
+      {
+        "field": "url",
+        "old": "https://www.anthropic.com/news/claude-opus-5",
+        "new": "https://www.anthropic.com/news/position-open-weights-models"
+      },
+      {
+        "field": "published_date",
+        "old": "2026-07-24T00:00:00Z",
+        "new": "2026-07-27T00:00:00Z"
+      },
+      {
+        "field": "summary",
+        "old": "Claude Opus 5 is available today. It’s a thoughtful and proactive model that comes close to the frontier intelligence of Claude Fable 5 at half the price.",
+        "new": "A post by Dario Amodei, Anthropic CEO"
+      }
+    ],
+    "similarity": 0.5006,
+    "content_hash": "181574b4cb00ec7a165ac15861488c6bf3e3dfd7cd52a554cbac2a759ff70723",
+    "previous_hash": "da65aeb17bbe0d3f1cd6d5e3b58de5cee430a88227000f9bb4093fefdeab4d66",
+    "reasons": [
+      "Content changed from prior snapshot; similarity 0.50."
+    ]
+  },
+  "health_score": 83,
+  "raw_output_path": null
+}

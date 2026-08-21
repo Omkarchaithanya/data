@@ -1,0 +1,25 @@
+{
+  "source_id": "canary_vendor",
+  "timestamp": "2026-08-21T10:23:27.121269+05:30",
+  "prompt": "The scraper for Canary Vendor Pricing at http://localhost:8000/canary/v1 is returning invalid output. Expected fields: model_name, input_price, output_price, effective_date. Missing fields: input_price, model_name, output_price. Null counts: model_name=1, input_price=1, output_price=1. Observed failure: Missing expected fields: input_price, model_name, output_price. Null rate 75% exceeds 25% threshold.\n\nINSTRUCTIONS:\nExtract model_name, input_price, output_price, and effective_date from the public canary vendor pricing page. Preserve field names exactly.",
+  "status": "awaiting_approval",
+  "preview_result": [
+    {
+      "model_name": "GroundTruth Mini",
+      "input_price": "$0.29 / 1M tokens",
+      "output_price": "$1.10 / 1M tokens",
+      "effective_date": "2026-08-17"
+    }
+  ],
+  "validation": {
+    "valid": true,
+    "row_count": 1,
+    "missing_fields": [],
+    "null_fields": {},
+    "null_rate": 0.0,
+    "errors": []
+  },
+  "approval_status": "ready",
+  "collector_id": "demo_canary_vendor",
+  "next_step": "Run `bdata scraper approve` to accept changes."
+}

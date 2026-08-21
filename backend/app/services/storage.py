@@ -66,6 +66,12 @@ class EventStore:
         ]
 
     def latest_records(self, source_id: str) -> list[dict[str, Any]] | None:
+        payload = self.latest_run(source_id)
+        if not payload:
+            return None
+        return payload.get("records")
+
+    def latest_run(self, source_id: str) -> dict[str, Any] | None:
         with sqlite3.connect(self.path) as conn:
             row = conn.execute(
                 """
@@ -77,5 +83,20 @@ class EventStore:
             ).fetchone()
         if not row:
             return None
-        payload = json.loads(row[0])
-        return payload.get("records")
+        return json.loads(row[0])
+
+    def latest_successful_run(self, source_id: str) -> dict[str, Any] | None:
+        with sqlite3.connect(self.path) as conn:
+            rows = conn.execute(
+                """
+                SELECT payload FROM events
+                WHERE source_id = ? AND kind = 'run'
+                ORDER BY id DESC LIMIT 50
+                """,
+                (source_id,),
+            ).fetchall()
+        for row in rows:
+            payload = json.loads(row[0])
+            if payload.get("validation", {}).get("valid"):
+                return payload
+        return None

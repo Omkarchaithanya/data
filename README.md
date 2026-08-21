@@ -26,6 +26,9 @@ flowchart LR
     Heal -- Approve --> BD
 ```
 
+### How Validation Works
+GroundTruth Guard ensures that no unverified claims enter the system by enforcing a strict field gating rule: if an expected field is entirely missing from **all** scraped records (e.g., the scraper failed to extract `published_date` for every article), the entire run fails validation due to structural drift. However, if a field is missing in only a few records but present in others, it is treated as a null value. This lenient record-level check tolerates isolated bad records (e.g., a stray link missing a title), but tracks them via a `null_rate`. If the null rate grows, it lowers the run's confidence score, visibly flagging affected claims in the Trust Ledger as "at-risk" rather than hard-blocking the entire pipeline over a single edge case.
+
 ### How Bright Data Scraper Studio Powers This
 GroundTruth Guard utilizes Bright Data Scraper Studio via its CLI to programmatically control the entire extraction lifecycle. Under the hood, the backend issues the following commands to create our self-healing loop:
 - `bdata scraper create`: Automatically provisions new scrapers based on dynamic LLM-generated prompts tailored to specific data schemas.
@@ -63,6 +66,32 @@ npm install
 npm run dev
 ```
 Open `http://localhost:5173` in your browser.
+
+### Flattened vs Nested Data Extraction
+GroundTruth Guard relies on flat, entity-focused data structures rather than deeply nested JSON. This flat structure is what allows the Trust Ledger to track, hash, and score individual claims independently.
+
+**Bad (Nested approach - hard to verify granular claims):**
+```json
+{
+  "models": [
+    {
+      "name": "Fable 5",
+      "pricing": { "input": "$10", "output": "$50" }
+    }
+  ]
+}
+```
+
+**Good (Flattened approach - used by GroundTruth Guard):**
+```json
+{
+  "product_page_url": "https://claude.com/pricing",
+  "model_name": "Fable 5",
+  "input_price": "$10",
+  "output_price": "$50"
+}
+```
+This flattened structure is what enables the system to construct granular, verifiable claims like `"Fable 5 input price: $10"`.
 
 ### Example Structured Output
 *This is real output, not a mock. Fetched dynamically via Bright Data Scraper Studio from `https://claude.com/pricing` using GroundTruth Guard.*
@@ -154,6 +183,8 @@ You can view E2E workflow capabilities below:
 - ![Mesh Overview](docs/e2e_mesh.png)
 - ![Pricing Drift](docs/e2e_pricing.png)
 - ![News Healing](docs/e2e_news.png)
+- ![Trust Ledger Top](docs/trust_ledger_top.png)
+- ![Trust Ledger Bottom](docs/trust_ledger_bottom.png)
 
 ### AI Assistance Disclosure
 This project was developed with the assistance of Claude Code acting as a coding agent. All AI-generated code, architectural decisions, and integrations were directed, extensively reviewed, and rigorously tested by the participating developer to meet the requirements of the *Into the Scrape-Verse* hackathon (Rule 11 compliance). 

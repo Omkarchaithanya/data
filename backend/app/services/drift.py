@@ -28,11 +28,12 @@ def detect_drift(
     semantic = False
     similarity = 1.0
     reasons: list[str] = []
-    changed_fields: list[str] = []
+    changed_fields: list[dict[str, Any]] = []
 
     if structural:
         reasons.extend(validation.errors)
-        changed_fields.extend(validation.missing_fields)
+        for missing in validation.missing_fields:
+            changed_fields.append({"field": missing, "old": "Present", "new": "Missing"})
 
     if previous_records is not None:
         previous_text = normalize_records(previous_records)
@@ -47,7 +48,7 @@ def detect_drift(
         drifted=structural or semantic,
         structural=structural,
         semantic=semantic,
-        changed_fields=sorted(set(changed_fields)),
+        changed_fields=changed_fields,
         similarity=round(similarity, 4),
         content_hash=current_hash,
         previous_hash=previous_hash,
@@ -59,11 +60,13 @@ def _changed_fields(
     previous_records: list[dict[str, Any]],
     current_records: list[dict[str, Any]],
     fields: list[str],
-) -> list[str]:
-    changed: list[str] = []
+) -> list[dict[str, Any]]:
+    changed: list[dict[str, Any]] = []
     previous_first = previous_records[0] if previous_records else {}
     current_first = current_records[0] if current_records else {}
     for field in fields:
-        if previous_first.get(field) != current_first.get(field):
-            changed.append(field)
+        old_val = previous_first.get(field)
+        new_val = current_first.get(field)
+        if old_val != new_val:
+            changed.append({"field": field, "old": old_val, "new": new_val})
     return changed

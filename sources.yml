@@ -12,7 +12,7 @@
   {
     "id": "anthropic_pricing",
     "name": "Anthropic API Pricing",
-    "url": "https://www.anthropic.com/pricing",
+    "url": "https://claude.com/pricing",
     "type": "pricing",
     "expected_fields": ["model_name", "input_price", "output_price"],
     "weight": 0.9,

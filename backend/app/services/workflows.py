@@ -22,10 +22,10 @@ class GroundTruthService:
     def list_sources(self) -> list[dict]:
         return [asdict(source) for source in load_sources()]
 
-    def run_source(self, source_id: str, mode: str = "healthy") -> RunResult:
+    def run_source(self, source_id: str, mode: str = "healthy", max_retries: int | None = None) -> RunResult:
         source = get_source(source_id)
         previous = self.store.latest_records(source_id)
-        if self.demo_mode:
+        if self.demo_mode or source_id == "canary_vendor":
             records = demo_records(source_id, mode)
         elif not source.collector_id:
             raise RuntimeError(
@@ -33,7 +33,7 @@ class GroundTruthService:
                 f"Set {source.collector_id_env} in .env."
             )
         else:
-            records = self.brightdata.run_scraper(source.collector_id, source.url)
+            records = self.brightdata.run_scraper(source.collector_id, source.url, max_retries=max_retries)
         validation = validate_records(source, records)
         drift = detect_drift(source, records, validation, previous)
         score = grounding_health_score(source, validation, drift)
@@ -41,16 +41,16 @@ class GroundTruthService:
         self.store.append(source.id, "run", result.timestamp, asdict(result))
         return result
 
-    def detect_source_drift(self, source_id: str, mode: str = "broken") -> RunResult:
+    def detect_source_drift(self, source_id: str, mode: str = "broken", max_retries: int | None = None) -> RunResult:
         source = get_source(source_id)
-        if self.demo_mode:
-            return self.run_source(source_id, mode=mode)
+        if self.demo_mode or source_id == "canary_vendor":
+            return self.run_source(source_id, mode=mode, max_retries=max_retries)
         
         # Real mode drift simulation: fetch real data, then mutate it to trigger schema failure
         if not source.collector_id:
             raise RuntimeError(f"Real mode is enabled, but {source.id} has no collector ID. Set {source.collector_id_env} in .env.")
             
-        real_records = self.brightdata.run_scraper(source.collector_id, source.url)
+        real_records = self.brightdata.run_scraper(source.collector_id, source.url, max_retries=max_retries)
         broken_records = []
         for r in real_records:
             br = dict(r)
@@ -68,14 +68,16 @@ class GroundTruthService:
         self.store.append(source.id, "run", result.timestamp, asdict(result))
         return result
 
-    def heal_source(self, source_id: str) -> HealResult:
+    def heal_source(self, source_id: str, max_retries: int | None = None) -> HealResult:
         source = get_source(source_id)
         records = self.store.latest_records(source_id) or []
         validation = validate_records(source, records)
         drift = detect_drift(source, records, validation)
         prompt = build_heal_prompt(source, validation, drift)
 
-        if self.demo_mode:
+        if self.demo_mode or source_id == "canary_vendor":
+            import time
+            time.sleep(2)  # Simulate network latency
             preview = demo_records(source_id, "healed")
             status = "awaiting_approval"
             collector_id = source.collector_id or f"demo_{source.id}"
@@ -86,7 +88,7 @@ class GroundTruthService:
                 f"Set {source.collector_id_env} in .env."
             )
         else:
-            payload = self.brightdata.heal_scraper(source.collector_id, prompt, source.url)
+            payload = self.brightdata.heal_scraper(source.collector_id, prompt, source.url, max_retries=max_retries)
             preview = payload.get("preview_result", [])
             status = payload.get("status", "awaiting_approval")
             collector_id = payload.get("collector_id", source.collector_id)
@@ -108,10 +110,16 @@ class GroundTruthService:
         self.store.append(source.id, "heal", result.timestamp, asdict(result))
         return result
 
+    def scrape_source(self, source_id: str, max_retries: int | None = None) -> dict:
+        source = get_source(source_id)
+        if not source.collector_id:
+            raise RuntimeError(f"Source {source_id} has no collector configured.")
+        return self.brightdata.run_scraper(source.collector_id, source.url, max_retries=max_retries)
+
     def approve_heal(self, source_id: str) -> dict:
         source = get_source(source_id)
         timestamp = utc_now_iso()
-        if self.demo_mode:
+        if self.demo_mode or source_id == "canary_vendor":
             payload = {"status": "approved", "collector_id": source.collector_id or f"demo_{source.id}"}
         elif not source.collector_id:
             raise RuntimeError(
@@ -126,7 +134,7 @@ class GroundTruthService:
     def reject_heal(self, source_id: str) -> dict:
         source = get_source(source_id)
         timestamp = utc_now_iso()
-        if self.demo_mode:
+        if self.demo_mode or source_id == "canary_vendor":
             payload = {"status": "rejected", "collector_id": source.collector_id or f"demo_{source.id}"}
         elif not source.collector_id:
             raise RuntimeError(
@@ -138,10 +146,8 @@ class GroundTruthService:
         self.store.append(source.id, "reject", timestamp, payload)
         return {"timestamp": timestamp, **payload}
 
-    def get_budget(self) -> dict:
-        if self.demo_mode:
-            return {"balance": "$45.50 remaining (Demo Mode)"}
-        return self.brightdata.get_budget()
+    def get_budget(self, source_id: str | None = None) -> dict:
+        return self.brightdata.get_budget(zone=source_id)
 
     def export_data(self) -> dict:
         sources = load_sources()
@@ -156,3 +162,32 @@ class GroundTruthService:
                     "records": records
                 })
         return {"evidence": export}
+
+    def export_trust_ledger(self) -> dict:
+        sources = load_sources()
+        ledger = []
+        for s in sources:
+            run = self.store.latest_successful_run(s.id)
+            if run:
+                records = run.get("records", [])
+                score = run.get("health_score", 100)
+                validation = run.get("validation", {})
+                status = "blocked" if not validation.get("valid") else ("at-risk" if score < 90 else "grounded")
+                verified_at = run.get("timestamp")
+                for r in records:
+                    identity = r.get("model") or r.get("title") or r.get("name") or "Item"
+                    for k, v in r.items():
+                        if k in ("model", "title", "name", "link", "url", "date", "input"):
+                            continue
+                        if v is None or str(v).strip() == "":
+                            continue
+                        claim_str = f"{identity} {k.replace('_', ' ')}: {v}"
+                        ledger.append({
+                            "claim": claim_str,
+                            "source_url": s.url,
+                            "verified_at": verified_at,
+                            "extractor_version": s.collector_id or "demo",
+                            "confidence_score": score,
+                            "status": status
+                        })
+        return {"trust_ledger": ledger}
