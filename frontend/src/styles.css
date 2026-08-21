@@ -71,7 +71,32 @@ aside {
     linear-gradient(#101928, #101928) padding-box,
     linear-gradient(135deg, #41e5ff, #9e6cff, #66f2a5) border-box;
   border: 1px solid transparent;
-  box-shadow: 0 0 34px rgba(65, 229, 255, 0.24);
+  box-shadow: 0 0 20px rgba(65, 229, 255, 0.4), inset 0 0 15px rgba(158, 108, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.brand-mark::after {
+  content: "";
+  position: absolute;
+  top: 0; left: -100%;
+  width: 50%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  transform: skewX(-20deg);
+  animation: shine 4s infinite;
+}
+
+@keyframes shine {
+  0% { left: -100%; }
+  20% { left: 200%; }
+  100% { left: 200%; }
+}
+
+.brand-mark svg {
+  color: #41e5ff;
+  filter: drop-shadow(0 0 8px rgba(65, 229, 255, 0.8));
+  stroke-width: 2.5px;
+  z-index: 1;
 }
 
 .brand h1 {
