@@ -278,7 +278,7 @@ h2 {
     conic-gradient(#66f2a5 calc(var(--score, 100) * 1%), rgba(255, 255, 255, 0.12) 0);
 }
 
-.score span {
+.score-orbit span {
   display: block;
   font-size: 44px;
   font-weight: 800;

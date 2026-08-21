@@ -471,8 +471,10 @@ function App() {
                   <small>{riskLabel}</small>
                   {run && (
                     <div className="score-timestamp" style={{ display: "flex", flexDirection: "column", gap: "2px", marginTop: "4px" }}>
-                      <span style={{ fontSize: "10px", opacity: 0.7, textTransform: "uppercase" }}>Last check</span>
-                      <span>{new Date(run.timestamp).toLocaleTimeString()}</span>
+                      <span style={{ fontSize: "10px", opacity: 0.7, textTransform: "uppercase", letterSpacing: "0.1em" }}>Last check</span>
+                      <span style={{ fontSize: "1.1rem", fontWeight: "bold", color: "#66f2a5", textShadow: "0 0 10px rgba(102, 242, 165, 0.6)", fontFamily: "monospace", letterSpacing: "0.05em" }}>
+                        {new Date(run.timestamp).toLocaleTimeString()}
+                      </span>
                     </div>
                   )}
                 </div>
