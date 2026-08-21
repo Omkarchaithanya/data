@@ -1,59 +1,109 @@
-# GroundTruth Guard: Self-Healing Pipeline for Unbreakable Scrapers
+<div align="center">
+  <h1>🛡️ GroundTruth Guard</h1>
+  <p><b>The Self-Healing Data Pipeline for Enterprise Web Scraping</b></p>
+  
+  <p>
+    <img src="https://img.shields.io/badge/python-3.13+-blue.svg" alt="Python 3.13+" />
+    <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License MIT" />
+    <img src="https://img.shields.io/badge/Powered%20by-Bright%20Data-yellow.svg" alt="Powered by Bright Data" />
+    <img src="https://img.shields.io/badge/Status-Production%20Ready-success.svg" alt="Status Production Ready" />
+  </p>
 
-**Never let a silent website update pollute your production database.** 
+  <p>
+    <a href="#the-problem">The Problem</a> •
+    <a href="#the-solution">The Solution</a> •
+    <a href="#quickstart">Quickstart</a> •
+    <a href="architecture.md">Architecture</a> •
+    <a href="DEMO.md">Demo Runbook</a>
+  </p>
+</div>
 
-Content specialists and data teams spend hours manually verifying scraped product, pricing, and documentation data to catch silent layout changes. GroundTruth Guard fully automates this pipeline. It turns fragile scrapers into self-healing, human-in-the-loop workflows that detect structural drift, quarantine bad data, and automatically generate repaired scraper code for 1-click approval.
-
-![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg) ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg) ![Built with Bright Data](https://img.shields.io/badge/Built_with-Bright_Data_Scraper_Studio-yellow.svg)
-
-### Documentation
-- [Architecture & Trade-offs](architecture.md)
-- [Live Demo Runbook](DEMO.md)
+<br/>
 
 ![Dashboard Overview](docs/e2e_mesh.png)
 
-### What it does
+---
 
-* **Never publishes a claim without proof:** Every field extracted carries a source URL, timestamp, and an automated health score to ensure data fidelity.
-* **Catches silent failures before they corrupt your DB:** Automated drift detection compares live extractions against strict YAML schemas and prior snapshots to catch semantic drift (e.g., $10 becoming $100) and structural drift (missing fields).
-* **Self-heals with a human in the loop:** When drift is detected, it automatically reverse-engineers the failure, feeds it to an LLM, and previews a fully healed scraper execution for single-click approval.
+## The Problem
+**Web scrapers break silently, and your data teams pay the price.** 
 
+When a target website deploys a minor DOM update, traditional scrapers don't throw errors—they silently extract `null` values or scrape the wrong fields. Downstream databases become polluted with bad data, Machine Learning models are trained on garbage, and engineering teams spend 40% of their time playing whack-a-mole with broken parser scripts.
 
+## The Solution
+**GroundTruth Guard** is an automated data fidelity platform that prevents silent website changes from ever reaching your production database. 
 
-### Quickstart
+It turns fragile, hard-coded scrapers into **resilient, self-healing workflows**. By orchestrating extractions through Bright Data Scraper Studio, GroundTruth Guard detects structural drift in real-time, quarantines anomalous data, and uses AI to automatically reverse-engineer and generate repaired scraper code for 1-click human approval.
 
-Clone the repo and navigate to the project directory:
+Never publish a claim without proof. Never let bad data poison your systems.
+
+---
+
+## ⚡ Core Capabilities
+
+### 📉 Real-Time Drift Detection
+Automated evaluation compares live extractions against strict YAML schemas and historical snapshots. We catch **structural drift** (missing fields) and **semantic drift** (e.g., a `$10` price suddenly parsing as `$100`) before they enter your database.
+
+### 🤖 AI-Powered Self-Healing
+When a scraper breaks, the system doesn't just alert you—it fixes it. GroundTruth Guard automatically analyzes the failure context, queries the target's new DOM structure, and leverages Anthropic LLMs to generate a fully repaired extraction schema. 
+
+### 👨‍💻 Human-in-the-Loop Security
+AI is powerful, but production data requires certainty. Repaired scrapers are executed in a sandbox, and the resulting data is presented in a "Heal Preview." **Nothing is deployed to production until a human clicks "Approve."**
+
+### 🛡️ Immutable Trust Ledger
+Every single field extracted carries a cryptographic lineage: a source URL, an exact timestamp, and an automated health score. 
+
+---
+
+## 🛠️ Quickstart
+
+### Prerequisites
+- Python 3.13+
+- Node.js v24+
+- Bright Data Account & API Key
+- Anthropic API Key
+
+### 1. Clone & Configure
 ```bash
 git clone https://github.com/Omkarchaithanya/data.git groundtruth-guard
 cd groundtruth-guard
+
+# Configure environment variables
+echo "BRIGHTDATA_API_KEY=your_bright_data_api_key_here" > .env
+echo "ANTHROPIC_API_KEY=your_anthropic_api_key_here" >> .env
+echo "DEMO_MODE=false" >> .env
 ```
 
-**1. Backend Setup**
+### 2. Launch Backend (FastAPI)
 ```bash
 # Install dependencies
 pip install -r requirements.txt
 
-# Set up your environment variables
-echo "BRIGHTDATA_API_KEY=your_bright_data_api_key_here" > .env
-echo "ANTHROPIC_API_KEY=your_anthropic_api_key_here" >> .env
-echo "DEMO_MODE=false" >> .env
-
-# Run the backend
+# Start the API server
 uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
 ```
 
-**2. Frontend Setup**
+### 3. Launch Frontend (React/Vite)
 ```bash
+# Open a new terminal tab
 cd frontend
 npm install
 npm run dev
 ```
-Open `http://localhost:5173` in your browser.
+Navigate to **`http://localhost:5173`** in your browser to access the command center.
 
-### Flattened vs Nested Data Extraction
-GroundTruth Guard relies on flat, entity-focused data structures rather than deeply nested JSON. This flat structure is what allows the Trust Ledger to track, hash, and score individual claims independently.
+---
 
-**Bad (Nested approach - hard to verify granular claims):**
+## 🏗️ Design Philosophy: Flattened over Nested
+
+Enterprise data systems require granular verifiable claims. Deeply nested JSON structures make it nearly impossible to track the health of individual data points over time. 
+
+GroundTruth Guard enforces a **flat, entity-focused data structure**. This allows the Trust Ledger to hash, track, and score individual claims independently.
+
+<details>
+<summary><b>View Data Structure Comparison (Click to expand)</b></summary>
+<br/>
+
+**❌ Bad (Nested approach - hard to track granular claims):**
 ```json
 {
   "models": [
@@ -65,7 +115,7 @@ GroundTruth Guard relies on flat, entity-focused data structures rather than dee
 }
 ```
 
-**Good (Flattened approach - used by GroundTruth Guard):**
+**✅ Good (Flattened approach - utilized by GroundTruth Guard):**
 ```json
 {
   "product_page_url": "https://claude.com/pricing",
@@ -74,115 +124,38 @@ GroundTruth Guard relies on flat, entity-focused data structures rather than dee
   "output_price": "$50"
 }
 ```
-This flattened structure is what enables the system to construct granular, verifiable claims like `"Fable 5 input price: $10"`.
+*This flattened structure enables the system to construct cryptographically verifiable claims like `"Fable 5 input price: $10"`.*
+</details>
 
-### Example Structured Output
-*This is real output, not a mock. Fetched dynamically via Bright Data Scraper Studio from `https://claude.com/pricing` using GroundTruth Guard.*
+---
 
-```json
-[
-  {
-    "product_page_url": "https://claude.com/pricing",
-    "input": "https://claude.com/pricing",
-    "model_name": "Fable 5",
-    "input_price": "$10",
-    "output_price": "$50"
-  },
-  {
-    "product_page_url": "https://claude.com/pricing",
-    "input": "https://claude.com/pricing",
-    "model_name": "Opus 5",
-    "input_price": "$5",
-    "output_price": "$25"
-  },
-  {
-    "product_page_url": "https://claude.com/pricing",
-    "input": "https://claude.com/pricing",
-    "model_name": "Sonnet 5",
-    "input_price": "$2",
-    "output_price": "$10"
-  },
-  {
-    "product_page_url": "https://claude.com/pricing",
-    "input": "https://claude.com/pricing",
-    "model_name": "Haiku 4.5",
-    "input_price": "$1",
-    "output_price": "$5"
-  },
-  {
-    "product_page_url": "https://claude.com/pricing",
-    "input": "https://claude.com/pricing",
-    "model_name": "Opus 4.8",
-    "input_price": "$5",
-    "output_price": "$25"
-  },
-  {
-    "product_page_url": "https://claude.com/pricing",
-    "input": "https://claude.com/pricing",
-    "model_name": "Sonnet 4.6",
-    "input_price": "$3",
-    "output_price": "$15"
-  },
-  {
-    "product_page_url": "https://claude.com/pricing",
-    "input": "https://claude.com/pricing",
-    "model_name": "Opus 4.7",
-    "input_price": "$5",
-    "output_price": "$25"
-  },
-  {
-    "product_page_url": "https://claude.com/pricing",
-    "input": "https://claude.com/pricing",
-    "model_name": "Opus 4.6",
-    "input_price": "$5",
-    "output_price": "$25"
-  },
-  {
-    "product_page_url": "https://claude.com/pricing",
-    "input": "https://claude.com/pricing",
-    "model_name": "Sonnet 4.5",
-    "input_price": "$3",
-    "output_price": "$15"
-  },
-  {
-    "product_page_url": "https://claude.com/pricing",
-    "input": "https://claude.com/pricing",
-    "model_name": "Opus 4.5",
-    "input_price": "$5",
-    "output_price": "$25"
-  },
-  {
-    "product_page_url": "https://claude.com/pricing",
-    "input": "https://claude.com/pricing",
-    "model_name": "Opus 4.1",
-    "input_price": "$15",
-    "output_price": "$75"
-  }
-]
-```
+## 📊 E2E Dashboards 
 
-### E2E Dashboards 
-You can view E2E workflow capabilities below:
-- ![Mesh Overview](docs/e2e_mesh.png)
-- ![Pricing Drift](docs/e2e_pricing.png)
-- ![News Healing](docs/e2e_news.png)
-- ![Trust Ledger Top](docs/trust_ledger_top.png)
-- ![Trust Ledger Bottom](docs/trust_ledger_bottom.png)
+Explore the capabilities of the GroundTruth Guard command center:
+
+| Mesh Overview | Drift Detection | AI Self-Healing |
+|:---:|:---:|:---:|
+| <img src="docs/e2e_mesh.png" width="250"/> | <img src="docs/e2e_pricing.png" width="250"/> | <img src="docs/e2e_news.png" width="250"/> |
+
+| Trust Ledger (Top) | Trust Ledger (Bottom) |
+|:---:|:---:|
+| <img src="docs/trust_ledger_top.png" width="400"/> | <img src="docs/trust_ledger_bottom.png" width="400"/> |
+
+---
+
+## 💻 Tech Stack
+
+| Layer | Technologies |
+| :--- | :--- |
+| **Frontend** | React 19, TypeScript, Vite, TailwindCSS, Lucide Icons |
+| **Backend** | Python 3.13, FastAPI, Pydantic |
+| **Extraction Engine** | Bright Data Scraper Studio API/CLI |
+| **Data Storage** | SQLite (Event Sourced Architecture) |
+
+---
 
 ### AI Assistance Disclosure
-This project was developed with the assistance of Claude Code acting as a coding agent. All AI-generated code, architectural decisions, and integrations were directed, extensively reviewed, and rigorously tested by the participating developer to meet the requirements of the *Into the Scrape-Verse* hackathon (Rule 11 compliance). 
+*This project was developed with the assistance of Claude Code acting as a coding agent. All AI-generated code, architectural decisions, and integrations were directed, extensively reviewed, and rigorously tested by the participating developer to meet the requirements of the **Into the Scrape-Verse** hackathon (Rule 11 compliance).*
 
 ### Demo Video
 [🔗 Watch the 3-minute GroundTruth Guard Demo](https://youtube.com/placeholder-link)
-
-### Tech Stack
-
-| Layer | Technologies |
-| --- | --- |
-| **Frontend** | React, TypeScript, Vite, TailwindCSS, Lucide Icons |
-| **Backend** | Python 3.13, FastAPI, Pydantic |
-| **Extraction** | Bright Data Scraper Studio API/CLI |
-| **Storage** | SQLite (Event Sourced) |
-
-### License
-MIT License
