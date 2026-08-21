@@ -5,45 +5,95 @@ GroundTruth Guard is an automated data fidelity platform that prevents silent we
 
 ## System Architecture
 
+GroundTruth Guard follows a clean, decoupled architecture. The React frontend interacts with a FastAPI backend that acts as the command center. The backend orchestrates external extractions via Bright Data, evaluates data fidelity locally, and stores immutable state in an event-sourced SQLite database.
+
+### 1. Structural Architecture
+
 ```mermaid
-flowchart TD
-    subgraph Frontend [React Frontend]
-        UI[Dashboard UI]
+graph TB
+    subgraph Client
+        Dashboard[React Dashboard UI\n(Vite, TailwindCSS)]
     end
 
-    subgraph Backend [FastAPI Backend]
-        API[routers/api.py]
-        Workflows[services/workflows.py]
-        Validation[services/validation.py]
-        Drift[services/drift.py]
-        Scoring[services/scoring.py]
-        PromptBuilder[services/prompt_builder.py]
+    subgraph GroundTruth Guard [FastAPI Application]
+        API[API Router\nrouters/api.py]
+        
+        subgraph Service Layer
+            Orchestrator[Workflow Engine\nworkflows.py]
+            Validator[Schema Validation\nvalidation.py]
+            DriftEngine[Drift Detection\ndrift.py]
+            HealthScorer[Health Scoring\nscoring.py]
+            HealPrompt[Prompt Builder\nprompt_builder.py]
+        end
+        
+        EventStore[(SQLite Event Store\nstorage.py)]
     end
 
-    subgraph Infrastructure [Data & External]
-        DB[(SQLite Event Store\nservices/storage.py)]
-        BD[Bright Data\nScraper Studio CLI]
+    subgraph External Infrastructure
+        BDCLI[Bright Data Scraper Studio CLI]
+        BDAPI[Bright Data API / Workers]
+        TargetWeb[Target Websites]
+        LLM[Anthropic LLMs\n(via Bright Data)]
     end
 
-    %% Main scraping flow
-    UI -->|run_source| API
-    API --> Workflows
-    Workflows -->|Execute| BD
-    BD -.->|Raw JSON| Workflows
-    Workflows --> Validation
-    Workflows --> Drift
-    Workflows --> Scoring
-    Workflows -->|Append result| DB
+    %% Client to Backend
+    Dashboard -- "HTTP REST" --> API
+    API --> Orchestrator
     
-    %% Self-healing loop (distinct branch)
-    UI -->|heal_source| API
-    API -->|Orchestrate Heal| Workflows
-    Workflows --> PromptBuilder
-    PromptBuilder -->|Inject failure context| BD
-    BD -.->|Preview healed JSON| Workflows
-    Workflows -->|Re-validate preview| Validation
-    UI -.->|Approve/Reject| Workflows
-    Workflows -->|Commit changes| BD
+    %% Internal orchestration
+    Orchestrator --> Validator
+    Orchestrator --> DriftEngine
+    Orchestrator --> HealthScorer
+    Orchestrator --> HealPrompt
+    Orchestrator -- "Append Events" --> EventStore
+    
+    %% Backend to Infrastructure
+    Orchestrator -- "Execute sync/heal" --> BDCLI
+    BDCLI -.-> BDAPI
+    BDAPI -- "Extract Data" --> TargetWeb
+    BDAPI -- "Generate/Fix Schema" --> LLM
+
+    classDef core fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#fff;
+    classDef infra fill:#1e293b,stroke:#94a3b8,stroke-width:2px,color:#fff;
+    class Orchestrator,Validator,DriftEngine,HealthScorer,HealPrompt core;
+    class EventStore,BDCLI,BDAPI,TargetWeb,LLM infra;
+```
+
+### 2. The Self-Healing Sequence
+
+The following sequence diagram illustrates the exact flow of data and control when structural drift is detected and a human operator initiates a self-healing cycle.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant UI as Dashboard UI
+    participant Workflows as Workflow Engine
+    participant Prompts as Prompt Builder
+    participant BD as Bright Data CLI
+    
+    User->>UI: Click "Generate Heal"
+    UI->>Workflows: POST /heal
+    
+    Workflows->>Prompts: build_heal_prompt(drift_context)
+    Prompts-->>Workflows: LLM Instructions
+    
+    Workflows->>BD: Execute `bdata scraper heal`
+    Note over BD: AI reverse-engineers DOM,<br/>repairs schema, tests execution
+    BD-->>Workflows: Raw Nested Preview JSON
+    
+    Workflows->>Workflows: Flatten nested data into 1D claims
+    Workflows->>Workflows: validate_records(preview_data)
+    
+    Workflows-->>UI: Status: "awaiting_approval" (Preview Data)
+    
+    User->>UI: Review claims, click "Approve"
+    UI->>Workflows: POST /approve-heal
+    Workflows->>BD: Execute `bdata scraper approve`
+    Note over BD: Overwrites production schema
+    
+    Workflows->>Workflows: Append "approve" to EventStore
+    Workflows-->>UI: Source Healed (Status: Green)
 ```
 
 ## Component Responsibilities
