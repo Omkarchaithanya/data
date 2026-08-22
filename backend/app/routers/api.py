@@ -110,3 +110,8 @@ async def export_trust_ledger() -> dict:
 @router.get("/events")
 async def events(limit: int = Query(100, ge=1, le=500)) -> list[dict]:
     return service.store.list_events(limit)
+
+
+@router.get("/cross-check")
+async def cross_check() -> dict:
+    return service.cross_check_sources()

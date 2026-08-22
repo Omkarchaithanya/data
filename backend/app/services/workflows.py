@@ -195,3 +195,23 @@ class GroundTruthService:
                             "verification_hash": str(run.get("drift", {}).get("content_hash", ""))[:12] if run.get("drift", {}).get("content_hash") else None
                         })
         return {"trust_ledger": ledger}
+
+    def cross_check_sources(self) -> dict:
+        pricing = self.store.latest_records("anthropic_pricing")
+        news = self.store.latest_records("anthropic_news")
+        
+        if not pricing or not news:
+            return {"unconfirmed_models": []}
+            
+        news_text = " ".join([
+            f"{r.get('title', '')} {r.get('summary', '')}".lower() 
+            for r in news
+        ])
+        
+        unconfirmed = []
+        for r in pricing:
+            model = r.get("model_name")
+            if model and model.lower() not in news_text:
+                unconfirmed.append(model)
+                
+        return {"unconfirmed_models": unconfirmed}

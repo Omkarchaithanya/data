@@ -122,6 +122,7 @@ function App() {
   const [forceRefresh, setForceRefresh] = useState(false);
   const [healCooldown, setHealCooldown] = useState(0);
   const [trustLedger, setTrustLedger] = useState<TrustLedgerClaim[]>([]);
+  const [unconfirmedModels, setUnconfirmedModels] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
@@ -142,21 +143,24 @@ function App() {
 
   async function refresh() {
     try {
-      const [sourceRes, eventRes, healthRes, ledgerRes] = await Promise.all([
+      const [sourceRes, eventRes, healthRes, ledgerRes, crossCheckRes] = await Promise.all([
         fetch(`${API_BASE}/sources`),
         fetch(`${API_BASE}/events`),
         fetch(`${API_BASE}/health`),
         fetch(`${API_BASE}/export/trust-ledger`),
+        fetch(`${API_BASE}/cross-check`),
       ]);
 
       const loadedSources = (await sourceRes.json()) as Source[];
       const health = (await healthRes.json()) as Health;
       const ledger = (await ledgerRes.json()) as { trust_ledger: TrustLedgerClaim[] };
+      const crossCheck = (await crossCheckRes.json()) as { unconfirmed_models: string[] };
 
       setSources(loadedSources);
       setEvents(await eventRes.json());
       setDemoMode(health.demo_mode);
       setTrustLedger(ledger.trust_ledger);
+      setUnconfirmedModels(crossCheck.unconfirmed_models || []);
       setError("");
     } catch {
       setError("Failed to connect to API. Check that the Zeal backend is running.");
@@ -414,6 +418,7 @@ function App() {
             atRiskSources={atRiskSources}
             recentEvents={recentEvents}
             latestHealthScores={latestHealthScores}
+            unconfirmedModels={unconfirmedModels}
             onSelect={setSelected}
             onExport={() => void handleExport()}
           />
@@ -471,6 +476,7 @@ function OverviewPage({
   atRiskSources,
   recentEvents,
   latestHealthScores,
+  unconfirmedModels,
   onSelect,
   onExport,
 }: {
@@ -483,6 +489,7 @@ function OverviewPage({
   atRiskSources: Source[];
   recentEvents: EventItem[];
   latestHealthScores: Record<string, number>;
+  unconfirmedModels: string[];
   onSelect: (id: string) => void;
   onExport: () => void;
 }) {
@@ -610,6 +617,26 @@ function OverviewPage({
             )}
           </div>
         </article>
+
+        {unconfirmedModels.length > 0 && (
+          <article className="card alert-card">
+            <div className="card-head">
+              <div><span className="eyebrow">CROSS-SOURCE CHECK</span><h3>Unconfirmed Models</h3></div>
+              <span className="count-pill">{unconfirmedModels.length}</span>
+            </div>
+            <div className="incident-list">
+              {unconfirmedModels.map((model) => (
+                <div key={model} style={{ display: 'flex', gap: '12px', padding: '12px', borderBottom: '1px solid #edf1f5', alignItems: 'center' }}>
+                  <span className="incident-icon amber"><VscWarning size={15} /></span>
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <strong style={{ fontSize: '13px', color: '#0f172a' }}>{model}</strong>
+                    <small style={{ fontSize: '12px', color: '#64748b' }}>Unconfirmed by second source (anthropic_news)</small>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </article>
+        )}
       </section>
     </div>
   );
