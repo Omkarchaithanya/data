@@ -57,6 +57,8 @@ type Drift = {
   changed_fields: { field: string; old: any; new: any }[];
   similarity: number;
   reasons: string[];
+  content_hash?: string;
+  previous_hash?: string;
 };
 
 type RunResult = {
@@ -99,6 +101,7 @@ type TrustLedgerClaim = {
   extractor_version: string;
   confidence_score: number;
   status: string;
+  source_id?: string;
   content_hash?: string;
   previous_hash?: string;
 };
@@ -398,7 +401,7 @@ function App() {
         {error && <div className="alert error"><VscWarning size={17} />{error}</div>}
 
         {selected === "trust-ledger" ? (
-          <TrustLedgerPage claims={trustLedger} onExport={() => void handleExport()} />
+          <TrustLedgerPage claims={trustLedger} events={events} onExport={() => void handleExport()} />
         ) : selected === "overview" ? (
           <OverviewPage
             sources={sources}
@@ -796,7 +799,9 @@ function SourcePage({
   );
 }
 
-function TrustLedgerPage({ claims, onExport }: { claims: TrustLedgerClaim[]; onExport: () => void }) {
+function TrustLedgerPage({ claims, events, onExport }: { claims: TrustLedgerClaim[]; events: EventItem[]; onExport: () => void }) {
+  const [traceClaim, setTraceClaim] = useState<TrustLedgerClaim | null>(null);
+
   return (
     <div className="page">
       <section className="page-hero">
@@ -816,7 +821,7 @@ function TrustLedgerPage({ claims, onExport }: { claims: TrustLedgerClaim[]; onE
           <article className="card empty-card"><EmptyState text="No verified claims found. Run a source first." /></article>
         ) : (
           claims.map((claim, idx) => (
-            <article className="card ledger-card" key={`${claim.claim}-${idx}`}>
+            <article className="card ledger-card clickable" key={`${claim.claim}-${idx}`} onClick={() => setTraceClaim(claim)}>
               <div className="ledger-main">
                 <div className="ledger-icon"><VscShield size={20} /></div>
                 <div>
@@ -842,6 +847,7 @@ function TrustLedgerPage({ claims, onExport }: { claims: TrustLedgerClaim[]; onE
           ))
         )}
       </section>
+      {traceClaim && <TraceModal claim={traceClaim} events={events} onClose={() => setTraceClaim(null)} />}
     </div>
   );
 }
@@ -865,6 +871,91 @@ function KpiCard({
 
 function EmptyState({ text }: { text: string }) {
   return <div className="empty-state"><VscPulse size={18} /><span>{text}</span></div>;
+}
+
+function TraceModal({ claim, events, onClose }: { claim: TrustLedgerClaim; events: EventItem[]; onClose: () => void }) {
+  const sourceEvents = useMemo(() => {
+    return [...events]
+      .filter(e => e.source_id === claim.source_id)
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()); // newest first
+  }, [events, claim.source_id]);
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={e => e.stopPropagation()}>
+        <header className="modal-header">
+          <div>
+            <span className="eyebrow">AUDIT TRAIL</span>
+            <h3>Provenance Trace</h3>
+          </div>
+          <button className="icon-button" onClick={onClose}><VscChromeClose size={16} /></button>
+        </header>
+        <div className="modal-body">
+          <div className="trace-summary">
+            <div>
+              <span className="trace-label">Claim:</span>
+              <strong>{claim.claim}</strong>
+            </div>
+            {claim.content_hash && (
+              <div>
+                <span className="trace-label">Content Hash:</span>
+                <code>{claim.content_hash}</code>
+              </div>
+            )}
+            <div>
+              <span className="trace-label">Source ID:</span>
+              <span>{claim.source_id}</span>
+            </div>
+          </div>
+          
+          <h4 className="timeline-title">Event Timeline</h4>
+          <div className="trace-timeline">
+            {sourceEvents.length === 0 ? (
+              <EmptyState text="No events found for this source in the recent cache." />
+            ) : (
+              sourceEvents.map((ev) => (
+                <div className="trace-event" key={ev.id}>
+                  <div className={`trace-icon ${ev.kind}`}>
+                    {ev.kind === "heal" ? <VscWand size={14} /> : ev.kind === "run" ? <VscPlay size={14} /> : ev.kind === "drift" ? <VscWarning size={14} /> : ev.kind === "approve" ? <VscPass size={14} /> : <VscPulse size={14} />}
+                  </div>
+                  <div className="trace-details">
+                    <div className="trace-event-header">
+                      <strong>{ev.kind.toUpperCase()}</strong>
+                      <small>{new Date(ev.timestamp).toLocaleString()}</small>
+                    </div>
+                    {ev.kind === 'run' && Boolean(ev.payload.validation) && (
+                      <div className="trace-meta-tags">
+                        <span className={`tag ${(ev.payload.validation as Validation).valid ? 'tag-green' : 'tag-red'}`}>
+                          Validation: {(ev.payload.validation as Validation).valid ? 'Pass' : 'Fail'}
+                        </span>
+                        <span className="tag">Rows: {(ev.payload.validation as Validation).row_count}</span>
+                        {(ev.payload.drift as Drift)?.content_hash && <span className="tag">Hash: {(ev.payload.drift as Drift).content_hash?.substring(0, 8)}</span>}
+                      </div>
+                    )}
+                    {ev.kind === 'heal' && Boolean(ev.payload.status) && (
+                      <div className="trace-meta-tags">
+                        <span className="tag tag-blue">Status: {String(ev.payload.status)}</span>
+                      </div>
+                    )}
+                    {ev.kind === 'drift' && Boolean(ev.payload.reasons) && (
+                      <div className="trace-meta-tags">
+                        <span className="tag tag-amber">Drift detected</span>
+                      </div>
+                    )}
+                    {ev.kind === 'approve' && (
+                      <div className="trace-meta-tags">
+                        <span className="tag tag-green">Approved by: Operator (Manual)</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 createRoot(document.getElementById("root")!).render(<App />);
