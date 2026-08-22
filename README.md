@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="zeal_banner.png" alt="Zeal Banner" width="800" />
+  <img src="docs/zeal_banner.png" alt="Zeal Banner" width="800" />
   <h1>🛡️ Zeal</h1>
   <p><b>The Self-Healing Data Pipeline for Enterprise Web Scraping</b></p>
   

@@ -5,6 +5,7 @@ import {
   VscChevronRight,
   VscChromeClose,
   VscCloudDownload,
+  VscCopy,
   VscDashboard,
   VscDatabase,
   VscLayout,
@@ -276,7 +277,9 @@ function App() {
     <main className="app-shell">
       <aside className={`sidebar ${mobileNavOpen ? "open" : ""}`}>
         <div className="sidebar-head">
-          <div className="brand-mark"><VscShield size={25} /></div>
+          <div className="brand-mark" style={{ background: 'transparent', boxShadow: 'none' }}>
+            <img src="/zeal_icon.png" alt="Zeal Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+          </div>
           <div>
             <h1>Zeal</h1>
             <p>Live evidence integrity</p>
@@ -756,7 +759,26 @@ function SourcePage({
         </article>
 
         <article className="card">
-          <div className="card-head"><div><span className="eyebrow">REPAIR PLAN</span><h3>Generated repair</h3></div><VscDashboard size={18} /></div>
+          <div className="card-head">
+            <div><span className="eyebrow">REPAIR PLAN</span><h3>Generated repair</h3></div>
+            {heal ? (
+              <button
+                className="secondary-btn"
+                style={{ padding: '4px 10px', fontSize: '11px', height: 'fit-content' }}
+                onClick={(e) => {
+                  navigator.clipboard.writeText(heal.prompt);
+                  const target = e.currentTarget;
+                  const originalHtml = target.innerHTML;
+                  target.innerHTML = 'Copied!';
+                  setTimeout(() => target.innerHTML = originalHtml, 2000);
+                }}
+              >
+                <VscCopy size={14} /> Copy Prompt
+              </button>
+            ) : (
+              <VscDashboard size={18} />
+            )}
+          </div>
           {heal ? (
             <pre className="repair-code">{heal.prompt}</pre>
           ) : (
