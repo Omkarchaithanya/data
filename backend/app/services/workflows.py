@@ -184,12 +184,14 @@ class GroundTruthService:
                         claim_str = f"{identity} {k.replace('_', ' ')}: {v}"
                         ledger.append({
                             "claim": claim_str,
+                            "source_id": s.id,
                             "source_url": s.url,
                             "verified_at": verified_at,
                             "extractor_version": s.collector_id or "demo",
                             "confidence_score": score,
                             "status": status,
                             "content_hash": run.get("drift", {}).get("content_hash"),
-                            "previous_hash": run.get("drift", {}).get("previous_hash")
+                            "previous_hash": run.get("drift", {}).get("previous_hash"),
+                            "verification_hash": str(run.get("drift", {}).get("content_hash", ""))[:12] if run.get("drift", {}).get("content_hash") else None
                         })
         return {"trust_ledger": ledger}

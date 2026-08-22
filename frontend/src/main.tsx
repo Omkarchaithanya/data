@@ -104,6 +104,7 @@ type TrustLedgerClaim = {
   source_id?: string;
   content_hash?: string;
   previous_hash?: string;
+  verification_hash?: string;
 };
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? "http://127.0.0.1:8000";
@@ -808,7 +809,7 @@ function TrustLedgerPage({ claims, events, onExport }: { claims: TrustLedgerClai
         <div>
           <span className="eyebrow">DATA PROVENANCE</span>
           <h2>Trust Ledger</h2>
-          <p>Verified claims preserved with source evidence and extraction metadata. Each claim is cryptographically chained to its prior verified state — tampering or silent edits are detectable.</p>
+          <p>Verified claims preserved with source evidence and extraction metadata. Each claim is linked to a SHA-256 hash of its verified source snapshot — any silent tampering after verification is detectable.</p>
         </div>
         <button className="secondary-btn" onClick={onExport}><VscCloudDownload size={16} /> Export raw evidence</button>
       </section>
@@ -826,7 +827,10 @@ function TrustLedgerPage({ claims, events, onExport }: { claims: TrustLedgerClai
                 <div className="ledger-icon"><VscShield size={20} /></div>
                 <div>
                   <span className="eyebrow">VERIFIED CLAIM</span>
-                  <h3>{claim.claim}</h3>
+                  <h3>
+                    {claim.claim}
+                    {claim.verification_hash && <code style={{ marginLeft: '12px', fontSize: '11px', padding: '2px 6px', background: '#f1f5f9', borderRadius: '4px', color: '#64748b', fontWeight: 500 }}>{claim.verification_hash}</code>}
+                  </h3>
                   <p>{claim.source_url}</p>
                 </div>
               </div>
