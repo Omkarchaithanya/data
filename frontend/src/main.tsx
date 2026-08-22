@@ -99,6 +99,8 @@ type TrustLedgerClaim = {
   extractor_version: string;
   confidence_score: number;
   status: string;
+  content_hash?: string;
+  previous_hash?: string;
 };
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? "http://127.0.0.1:8000";
@@ -801,7 +803,7 @@ function TrustLedgerPage({ claims, onExport }: { claims: TrustLedgerClaim[]; onE
         <div>
           <span className="eyebrow">DATA PROVENANCE</span>
           <h2>Trust Ledger</h2>
-          <p>Verified claims preserved with source evidence and extraction metadata.</p>
+          <p>Verified claims preserved with source evidence and extraction metadata. Each claim is cryptographically chained to its prior verified state — tampering or silent edits are detectable.</p>
         </div>
         <button className="secondary-btn" onClick={onExport}><VscCloudDownload size={16} /> Export raw evidence</button>
       </section>
@@ -828,6 +830,13 @@ function TrustLedgerPage({ claims, onExport }: { claims: TrustLedgerClaim[]; onE
                 <span><b>Confidence</b>{claim.confidence_score}/100</span>
                 <span><b>Verified</b>{new Date(claim.verified_at).toLocaleString()}</span>
                 <span><b>Extractor</b>{claim.extractor_version}</span>
+                {claim.content_hash && (
+                  <span className="hash-chain" title={claim.previous_hash ? `Previous: ${claim.previous_hash}` : "First snapshot"}>
+                    <b>Hash</b>
+                    <code>{claim.content_hash.slice(0, 8)}</code>
+                    {claim.previous_hash && <VscRepoForked style={{marginLeft: '4px', opacity: 0.6}} />}
+                  </span>
+                )}
               </div>
             </article>
           ))

@@ -296,9 +296,11 @@ pre { margin:0; background:#0f1724; color:#d8e3f2; border-radius:10px; padding:1
 .ledger-icon { width:40px; height:40px; border-radius:11px; display:grid; place-items:center; color:#15803d; background:#ebf8ef; }
 .ledger-card h3 { margin:4px 0 4px; font-size:13px; }
 .ledger-card p { margin:0; color:#6e7d91; font:9px var(--mono); overflow-wrap:anywhere; }
-.ledger-meta { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:15px; padding-top:13px; border-top:1px solid #edf1f5; }
+.ledger-meta { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-top:15px; padding-top:13px; border-top:1px solid #edf1f5; }
 .ledger-meta span { color:#748296; font-size:9px; }
 .ledger-meta b { display:block; color:#334155; margin-bottom:4px; font-size:9px; }
+.hash-chain { cursor: help; display: inline-flex; align-items: center; }
+.hash-chain code { color: var(--blue); background: var(--blue-soft); padding: 2px 4px; border-radius: 4px; font-family: var(--mono); letter-spacing: 0.05em; font-weight: 500; }
 
 .empty-state { min-height:110px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px; color:#95a1b0; font-size:10px; text-align:center; }
 .empty-card { padding:40px; }

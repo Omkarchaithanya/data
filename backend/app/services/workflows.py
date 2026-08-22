@@ -188,6 +188,8 @@ class GroundTruthService:
                             "verified_at": verified_at,
                             "extractor_version": s.collector_id or "demo",
                             "confidence_score": score,
-                            "status": status
+                            "status": status,
+                            "content_hash": run.get("drift", {}).get("content_hash"),
+                            "previous_hash": run.get("drift", {}).get("previous_hash")
                         })
         return {"trust_ledger": ledger}
